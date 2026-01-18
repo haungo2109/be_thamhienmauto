@@ -69,6 +69,58 @@
  *         usage_limit: { type: integer }
  *         usage_count: { type: integer }
  *         expiry_date: { type: string, format: date-time }
+ *     Comment:
+ *       type: object
+ *       properties:
+ *         id: { type: integer }
+ *         post_id: { type: integer }
+ *         user_id: { type: integer }
+ *         author_name: { type: string }
+ *         author_email: { type: string }
+ *         content: { type: string }
+ *         is_approved: { type: boolean }
+ *         parent_id: { type: integer }
+ *         created_at: { type: string, format: date-time }
+ *     PostMeta:
+ *       type: object
+ *       properties:
+ *         id: { type: integer }
+ *         post_id: { type: integer }
+ *         meta_key: { type: string }
+ *         meta_value: { type: string }
+ *     ProductImage:
+ *       type: object
+ *       properties:
+ *         id: { type: integer }
+ *         product_id: { type: integer }
+ *         image_url: { type: string }
+ *         display_order: { type: integer }
+ *     ProductVariant:
+ *       type: object
+ *       properties:
+ *         id: { type: integer }
+ *         product_id: { type: integer }
+ *         sku: { type: string }
+ *         price: { type: number }
+ *         stock_quantity: { type: integer }
+ *         image_url: { type: string }
+ *     VariantOption:
+ *       type: object
+ *       properties:
+ *         id: { type: integer }
+ *         variant_id: { type: integer }
+ *         attribute_name: { type: string }
+ *         attribute_value: { type: string }
+ *     OrderItem:
+ *       type: object
+ *       properties:
+ *         id: { type: integer }
+ *         order_id: { type: integer }
+ *         product_id: { type: integer }
+ *         product_name: { type: string }
+ *         quantity: { type: integer }
+ *         unit_price: { type: number }
+ *         subtotal: { type: number }
  */
 
 /**
@@ -250,4 +302,430 @@
  *     responses:
  *       201:
  *         description: Coupon created
+ */
+
+/**
+ * @swagger
+ * /api/comments:
+ *   get:
+ *     summary: Get all comments
+ *     responses:
+ *       200:
+ *         description: List of comments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Comment'
+ *   post:
+ *     summary: Create a new comment
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Comment'
+ *     responses:
+ *       201:
+ *         description: Comment created
+ * /api/comments/{id}:
+ *   get:
+ *     summary: Get comment by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Comment details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Comment'
+ *   put:
+ *     summary: Update comment
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Comment'
+ *     responses:
+ *       200:
+ *         description: Comment updated
+ *   delete:
+ *     summary: Delete comment
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Comment deleted
+ */
+
+/**
+ * @swagger
+ * /api/post-metas:
+ *   get:
+ *     summary: Get all post metas
+ *     responses:
+ *       200:
+ *         description: List of post metas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/PostMeta'
+ *   post:
+ *     summary: Create a new post meta
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PostMeta'
+ *     responses:
+ *       201:
+ *         description: PostMeta created
+ * /api/post-metas/{id}:
+ *   get:
+ *     summary: Get post meta by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: PostMeta details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PostMeta'
+ *   put:
+ *     summary: Update post meta
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PostMeta'
+ *     responses:
+ *       200:
+ *         description: PostMeta updated
+ *   delete:
+ *     summary: Delete post meta
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: PostMeta deleted
+ */
+
+/**
+ * @swagger
+ * /api/product-images:
+ *   get:
+ *     summary: Get all product images
+ *     responses:
+ *       200:
+ *         description: List of product images
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ProductImage'
+ *   post:
+ *     summary: Create a new product image
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ProductImage'
+ *     responses:
+ *       201:
+ *         description: ProductImage created
+ * /api/product-images/{id}:
+ *   get:
+ *     summary: Get product image by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: ProductImage details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ProductImage'
+ *   put:
+ *     summary: Update product image
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ProductImage'
+ *     responses:
+ *       200:
+ *         description: ProductImage updated
+ *   delete:
+ *     summary: Delete product image
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: ProductImage deleted
+ */
+
+/**
+ * @swagger
+ * /api/product-variants:
+ *   get:
+ *     summary: Get all product variants
+ *     responses:
+ *       200:
+ *         description: List of product variants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ProductVariant'
+ *   post:
+ *     summary: Create a new product variant
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ProductVariant'
+ *     responses:
+ *       201:
+ *         description: ProductVariant created
+ * /api/product-variants/{id}:
+ *   get:
+ *     summary: Get product variant by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: ProductVariant details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ProductVariant'
+ *   put:
+ *     summary: Update product variant
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ProductVariant'
+ *     responses:
+ *       200:
+ *         description: ProductVariant updated
+ *   delete:
+ *     summary: Delete product variant
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: ProductVariant deleted
+ */
+
+/**
+ * @swagger
+ * /api/variant-options:
+ *   get:
+ *     summary: Get all variant options
+ *     responses:
+ *       200:
+ *         description: List of variant options
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/VariantOption'
+ *   post:
+ *     summary: Create a new variant option
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/VariantOption'
+ *     responses:
+ *       201:
+ *         description: VariantOption created
+ * /api/variant-options/{id}:
+ *   get:
+ *     summary: Get variant option by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: VariantOption details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VariantOption'
+ *   put:
+ *     summary: Update variant option
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/VariantOption'
+ *     responses:
+ *       200:
+ *         description: VariantOption updated
+ *   delete:
+ *     summary: Delete variant option
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: VariantOption deleted
+ */
+
+/**
+ * @swagger
+ * /api/order-items:
+ *   get:
+ *     summary: Get all order items
+ *     responses:
+ *       200:
+ *         description: List of order items
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/OrderItem'
+ *   post:
+ *     summary: Create a new order item
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/OrderItem'
+ *     responses:
+ *       201:
+ *         description: OrderItem created
+ * /api/order-items/{id}:
+ *   get:
+ *     summary: Get order item by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: OrderItem details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/OrderItem'
+ *   put:
+ *     summary: Update order item
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/OrderItem'
+ *     responses:
+ *       200:
+ *         description: OrderItem updated
+ *   delete:
+ *     summary: Delete order item
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: OrderItem deleted
  */

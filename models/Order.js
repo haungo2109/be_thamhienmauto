@@ -1,10 +1,9 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
-const User = require('./User');
 
 const Order = sequelize.define('Order', {
   id: { type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true },
-  user_id: { type: DataTypes.BIGINT, references: { model: User, key: 'id' } },
+  user_id: { type: DataTypes.BIGINT },
   order_number: { type: DataTypes.STRING(50), allowNull: false, unique: true },
   status: { type: DataTypes.ENUM('pending', 'processing', 'completed', 'cancelled', 'refunded'), defaultValue: 'pending' },
   total_amount: { type: DataTypes.DECIMAL(15, 2), allowNull: false },
@@ -18,7 +17,5 @@ const Order = sequelize.define('Order', {
   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 }, { timestamps: false });
-
-Order.belongsTo(User, { foreignKey: 'user_id' });
 
 module.exports = Order;

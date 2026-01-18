@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
-const Category = require('./Category');
 
 const Product = sequelize.define('Product', {
   id: { type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true },
@@ -13,11 +12,9 @@ const Product = sequelize.define('Product', {
   stock_quantity: { type: DataTypes.INTEGER, defaultValue: 0 },
   stock_status: { type: DataTypes.ENUM('in_stock', 'out_of_stock', 'backorder'), defaultValue: 'in_stock' },
   image_url: { type: DataTypes.STRING(255) },
-  category_id: { type: DataTypes.BIGINT, references: { model: Category, key: 'id' } },
+  category_id: { type: DataTypes.BIGINT },
   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 }, { timestamps: false });
-
-Product.belongsTo(Category, { foreignKey: 'category_id' });
 
 module.exports = Product;

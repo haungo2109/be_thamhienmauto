@@ -6,10 +6,7 @@ const Category = sequelize.define('Category', {
   name: { type: DataTypes.STRING(200), allowNull: false },
   slug: { type: DataTypes.STRING(200), allowNull: false, unique: true },
   description: { type: DataTypes.TEXT },
-  parent_id: { type: DataTypes.BIGINT, references: { model: 'categories', key: 'id' } },
+  parent_id: { type: DataTypes.BIGINT },
 }, { timestamps: false });
-
-Category.belongsTo(Category, { as: 'parent', foreignKey: 'parent_id' });
-Category.hasMany(Category, { as: 'children', foreignKey: 'parent_id' });
 
 module.exports = Category;
