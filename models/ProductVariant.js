@@ -8,6 +8,7 @@ const ProductVariant = sequelize.define('ProductVariant', {
   price: { type: DataTypes.DECIMAL(15, 2), allowNull: false },
   stock_quantity: { type: DataTypes.INTEGER, defaultValue: 0 },
   image_url: { type: DataTypes.STRING(255) },
+  extra_data: { type: DataTypes.JSONB, allowNull: true },
 }, { timestamps: false });
 
 module.exports = ProductVariant;
