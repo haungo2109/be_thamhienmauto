@@ -8,9 +8,9 @@ exports.getUsers = async (req, res) => {
 };
 
 exports.createUser = async (req, res) => {
-  const { username, email, password, display_name, role } = req.body;
+  const { username, email, password, display_name } = req.body;
   const password_hash = await bcrypt.hash(password, 10);
-  const user = await User.create({ username, email, password_hash, display_name, role });
+  const user = await User.create({ username, email, password_hash, display_name, role: 'user' });
   res.status(201).json(user);
 };
 

@@ -64,26 +64,21 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Routes
-app.use("/api/users", userRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/posts", postRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/coupons", couponRoutes);
-app.use("/api/comments", commentRoutes);
-app.use("/api/post-metas", postMetaRoutes);
-app.use("/api/product-images", productImageRoutes);
-app.use("/api/product-variants", productVariantRoutes);
-app.use("/api/variant-options", variantOptionRoutes);
-app.use("/api/order-items", orderItemRoutes);
+app.use("/api/users", authMiddleware, userRoutes);
+app.use("/api/categories", authMiddleware, categoryRoutes);
+app.use("/api/posts", authMiddleware, postRoutes);
+app.use("/api/products", authMiddleware, productRoutes);
+app.use("/api/orders", authMiddleware, orderRoutes);
+app.use("/api/coupons", authMiddleware, couponRoutes);
+app.use("/api/comments", authMiddleware, commentRoutes);
+app.use("/api/post-metas", authMiddleware, postMetaRoutes);
+app.use("/api/product-images", authMiddleware, productImageRoutes);
+app.use("/api/product-variants", authMiddleware, productVariantRoutes);
+app.use("/api/variant-options", authMiddleware, variantOptionRoutes);
+app.use("/api/order-items", authMiddleware, orderItemRoutes);
 
 // Swagger docs route
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
-
-// Protected route example
-app.get("/api/protected", authMiddleware, (req, res) => {
-  res.json({ message: "Protected route", user: req.user });
-});
 
 // Handle 404 (Route not found)
 app.use((req, res, next) => {
