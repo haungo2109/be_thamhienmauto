@@ -28,7 +28,6 @@
  *         content: { type: string }
  *         excerpt: { type: string }
  *         status: { type: string, enum: [published, draft, archived] }
- *         post_type: { type: string, enum: [post, page] }
  *     Product:
  *       type: object
  *       properties:

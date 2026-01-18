@@ -1,6 +1,6 @@
 const Post = require('../models/Post');
 const User = require('../models/User');
-const Category = require('../models/Category');
+const PostCategory = require('../models/PostCategory');
 const Joi = require('joi');
 const slugify = require('slugify');
 const { paginate } = require('../utils/pagination');
@@ -10,7 +10,7 @@ const postSchema = Joi.object({
   content: Joi.string(),
   excerpt: Joi.string().max(500),
   status: Joi.string().valid('published', 'draft', 'archived'),
-  post_type: Joi.string().valid('post', 'page')
+  category_id: Joi.number().integer()
 });
 
 exports.getPosts = async (req, res) => {
@@ -19,7 +19,7 @@ exports.getPosts = async (req, res) => {
       req,
       include: [
         { model: User, as: 'User', attributes: ['id', 'username', 'display_name'] },
-        { model: Category, as: 'Categories' }
+        { model: PostCategory, as: 'PostCategory' }
       ]
     });
     res.json(result);
@@ -32,8 +32,8 @@ exports.getPost = async (req, res) => {
   try {
     const post = await Post.findByPk(req.params.id, {
       include: [
-        { model: require('../models/User'), as: 'User', attributes: ['id', 'username', 'display_name'] },
-        { model: require('../models/Category'), as: 'Categories' }
+        { model: User, as: 'User', attributes: ['id', 'username', 'display_name'] },
+        { model: PostCategory, as: 'PostCategory' }
       ]
     });
     if (!post) return res.status(404).json({ error: 'Post not found' });

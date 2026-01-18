@@ -1,6 +1,7 @@
 const User = require("./models/User");
 const Category = require("./models/Category");
 const Post = require("./models/Post");
+const PostCategory = require("./models/PostCategory");
 const Comment = require("./models/Comment");
 const PostMeta = require("./models/PostMeta");
 const Product = require("./models/Product");
@@ -21,13 +22,16 @@ User.hasMany(Order, { foreignKey: "user_id" });
 // --- Category ---
 Category.belongsTo(Category, { foreignKey: "parent_id" });
 Category.hasMany(Category, { foreignKey: "parent_id" });
-// Dùng through là tên bảng string 'post_categories' khớp với SQL
-Category.belongsToMany(Post, { through: "post_categories", foreignKey: "category_id", otherKey: "post_id" });
 Category.hasMany(Product, { foreignKey: "category_id" });
+
+// PostCategory associations
+PostCategory.belongsTo(PostCategory, { as: 'Parent', foreignKey: 'parent_id' });
+PostCategory.hasMany(PostCategory, { as: 'Children', foreignKey: 'parent_id' });
+PostCategory.hasMany(Post, { foreignKey: 'category_id' });
 
 // Post associations
 Post.belongsTo(User, { foreignKey: "author_id" }); // Quan trọng: as 'author'
-Post.belongsToMany(Category, { through: "post_categories", foreignKey: "post_id", otherKey: "category_id" });
+Post.belongsTo(PostCategory, { foreignKey: 'category_id' });
 Post.hasMany(Comment, { foreignKey: "post_id" });
 Post.hasMany(PostMeta, { foreignKey: "post_id" });
 

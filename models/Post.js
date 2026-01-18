@@ -9,7 +9,7 @@ const Post = sequelize.define('Post', {
   content: { type: DataTypes.TEXT },
   excerpt: { type: DataTypes.TEXT },
   status: { type: DataTypes.ENUM('published', 'draft', 'archived'), defaultValue: 'draft' },
-  post_type: { type: DataTypes.ENUM('post', 'page'), defaultValue: 'post' },
+  category_id: { type: DataTypes.INTEGER, allowNull: true },
   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 }, { timestamps: false });

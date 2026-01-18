@@ -14,7 +14,6 @@ $$ language 'plpgsql';
 -- Định nghĩa các kiểu dữ liệu ENUM (Danh sách chọn)
 CREATE TYPE user_role_type AS ENUM ('admin', 'editor', 'author', 'subscriber');
 CREATE TYPE post_status_type AS ENUM ('published', 'draft', 'archived');
-CREATE TYPE post_type_enum AS ENUM ('post', 'page');
 CREATE TYPE stock_status_type AS ENUM ('in_stock', 'out_of_stock', 'backorder');
 CREATE TYPE order_status_type AS ENUM ('pending', 'processing', 'completed', 'cancelled', 'refunded');
 CREATE TYPE discount_type_enum AS ENUM ('fixed_cart', 'percent');
@@ -53,16 +52,19 @@ CREATE TABLE posts (
     content TEXT,
     excerpt TEXT,
     status post_status_type DEFAULT 'draft',
-    post_type post_type_enum DEFAULT 'post',
+    category_id INTEGER REFERENCES post_categories(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Bảng trung gian Bài viết - Danh mục
+-- 4. Bảng Danh mục Bài viết
 CREATE TABLE post_categories (
-    post_id BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-    category_id BIGINT NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
-    PRIMARY KEY (post_id, category_id)
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    parent_id INTEGER REFERENCES post_categories(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 5. Bảng Bình luận
