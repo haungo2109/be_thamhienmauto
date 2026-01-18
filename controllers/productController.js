@@ -3,7 +3,7 @@ const Category = require('../models/Category');
 const Joi = require('joi');
 const slugify = require('slugify');
 const { paginate } = require('../utils/pagination');
-const { uploadFile, deleteFile } = require('../utils/minio');
+const { uploadFile, deleteFile } = require('../utils/rustfs');
 const multer = require('multer');
 
 // Configure multer for memory storage

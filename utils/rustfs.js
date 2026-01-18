@@ -1,14 +1,15 @@
 const { Client } = require('minio');
 
 const minioClient = new Client({
-  endPoint: process.env.MINIO_ENDPOINT,
-  useSSL: process.env.MINIO_USE_SSL === 'true',
-  accessKey: process.env.MINIO_ACCESS_KEY,
-  secretKey: process.env.MINIO_SECRET_KEY,
-  region: process.env.MINIO_REGION
+  endPoint: process.env.RUSTFS_ENDPOINT,
+  useSSL: process.env.RUSTFS_USE_SSL === 'true',
+  accessKey: process.env.RUSTFS_ACCESS_KEY,
+  secretKey: process.env.RUSTFS_SECRET_KEY,
+  region: process.env.RUSTFS_REGION
 });
 
-const bucketName = process.env.MINIO_BUCKET;
+const bucketName = process.env.RUSTFS_BUCKET;
+const BASE_URL = `${process.env.RUSTFS_USE_SSL === 'true' ? 'https' : 'http'}://${process.env.RUSTFS_ENDPOINT}/${bucketName}`;
 
 // Function to upload file
 const uploadFile = async (fileName, fileBuffer, mimeType) => {
@@ -16,7 +17,7 @@ const uploadFile = async (fileName, fileBuffer, mimeType) => {
     await minioClient.putObject(bucketName, fileName, fileBuffer, {
       'Content-Type': mimeType
     });
-    const url = `${process.env.MINIO_USE_SSL === 'true' ? 'https' : 'http'}://${process.env.MINIO_ENDPOINT}/${bucketName}/${fileName}`;
+    const url = `${BASE_URL}/${fileName}`;
     return url;
   } catch (error) {
     throw new Error(`MinIO upload failed: ${error.message}`);
@@ -34,7 +35,7 @@ const deleteFile = async (fileName) => {
 
 // Function to get file URL
 const getFileUrl = (fileName) => {
-  return `${process.env.MINIO_USE_SSL === 'true' ? 'https' : 'http'}://${process.env.MINIO_ENDPOINT}/${bucketName}/${fileName}`;
+  return `${BASE_URL}/${fileName}`;
 };
 
 module.exports = { minioClient, uploadFile, deleteFile, getFileUrl };

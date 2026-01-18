@@ -3,7 +3,7 @@ const Product = require('../models/Product');
 const VariantOption = require('../models/VariantOption');
 const Joi = require('joi');
 const { paginate } = require('../utils/pagination');
-const { uploadFile, deleteFile } = require('../utils/minio');
+const { uploadFile, deleteFile } = require('../utils/rustfs');
 const multer = require('multer');
 
 // Configure multer for memory storage
