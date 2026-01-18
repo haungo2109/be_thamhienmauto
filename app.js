@@ -9,6 +9,8 @@ const orderRoutes = require('./routes/orders');
 const couponRoutes = require('./routes/coupons');
 const authMiddleware = require('./middleware/auth');
 const errorHandler = require('./middleware/errorHandler');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpecs = require('./swagger');
 
 const app = express();
 app.use(express.json());
@@ -20,6 +22,9 @@ app.use('/api/posts', postRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/coupons', couponRoutes);
+
+// Swagger docs route
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 // Protected route example
 app.get('/api/protected', authMiddleware, (req, res) => {
