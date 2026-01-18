@@ -22,6 +22,7 @@ const productImageRoutes = require("./routes/product-images");
 const productVariantRoutes = require("./routes/product-variants");
 const variantOptionRoutes = require("./routes/variant-options");
 const orderItemRoutes = require("./routes/order-items");
+const attributeRoutes = require("./routes/attributes");
 const authMiddleware = require("./middleware/auth");
 const errorHandler = require("./middleware/errorHandler");
 const swaggerUi = require("swagger-ui-express");
@@ -76,6 +77,7 @@ app.use("/api/product-images", authMiddleware, productImageRoutes);
 app.use("/api/product-variants", authMiddleware, productVariantRoutes);
 app.use("/api/variant-options", authMiddleware, variantOptionRoutes);
 app.use("/api/order-items", authMiddleware, orderItemRoutes);
+app.use("/api/attributes", authMiddleware, attributeRoutes);
 
 // Swagger docs route
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));

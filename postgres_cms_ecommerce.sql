@@ -116,7 +116,14 @@ CREATE TABLE product_images (
 );
 
 -- 9. Bảng Biến thể sản phẩm (SKUs - Variants)
--- Ví dụ: Áo Đỏ Size M (Có ảnh riêng, giá riêng)
+-- 9. Bảng Thuộc tính (Attributes)
+-- Định nghĩa các thuộc tính như Color, Size, etc.
+CREATE TABLE attribute (
+    attribute_name VARCHAR(50) PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 10. Bảng Biến thể sản phẩm
 CREATE TABLE product_variants (
     id BIGSERIAL PRIMARY KEY,
     product_id BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
@@ -126,12 +133,12 @@ CREATE TABLE product_variants (
     image_url VARCHAR(255) DEFAULT NULL -- Ảnh riêng cho biến thể này
 );
 
--- 10. Bảng Thuộc tính biến thể
+-- 11. Bảng Thuộc tính biến thể
 -- Định nghĩa biến thể trên là: Màu=Đỏ, Size=M
 CREATE TABLE variant_options (
     id BIGSERIAL PRIMARY KEY,
     variant_id BIGINT NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,
-    attribute_name VARCHAR(50) NOT NULL, -- "Color"
+    attribute_name VARCHAR(50) NOT NULL REFERENCES attribute(attribute_name) ON DELETE CASCADE,
     attribute_value VARCHAR(50) NOT NULL -- "Red"
 );
 
@@ -139,7 +146,7 @@ CREATE TABLE variant_options (
 -- PHẦN 4: ĐƠN HÀNG & MÃ GIẢM GIÁ
 -- =================================================================
 
--- 11. Bảng Mã giảm giá (Coupons)
+-- 12. Bảng Mã giảm giá (Coupons)
 CREATE TABLE coupons (
     id BIGSERIAL PRIMARY KEY,
     code VARCHAR(50) NOT NULL UNIQUE,

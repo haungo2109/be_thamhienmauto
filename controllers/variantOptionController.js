@@ -1,5 +1,6 @@
 const VariantOption = require('../models/VariantOption');
 const ProductVariant = require('../models/ProductVariant');
+const Attribute = require('../models/Attribute');
 const Joi = require('joi');
 const { paginate } = require('../utils/pagination');
 
@@ -13,7 +14,10 @@ exports.getVariantOptions = async (req, res) => {
   try {
     const result = await paginate(VariantOption, {
       req,
-      include: [{ model: ProductVariant, as: 'ProductVariant' }]
+      include: [
+        { model: ProductVariant, as: 'ProductVariant' },
+        { model: Attribute, as: 'Attribute' }
+      ]
     });
     res.json(result);
   } catch (error) {
@@ -24,7 +28,10 @@ exports.getVariantOptions = async (req, res) => {
 exports.getVariantOption = async (req, res) => {
   try {
     const variantOption = await VariantOption.findByPk(req.params.id, {
-      include: [{ model: require('../models/ProductVariant'), as: 'ProductVariant' }]
+      include: [
+        { model: ProductVariant, as: 'ProductVariant' },
+        { model: Attribute, as: 'Attribute' }
+      ]
     });
     if (!variantOption) return res.status(404).json({ error: 'VariantOption not found' });
     res.json(variantOption);

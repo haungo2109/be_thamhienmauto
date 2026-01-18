@@ -7,6 +7,7 @@ const Product = require("./models/Product");
 const ProductImage = require("./models/ProductImage");
 const ProductVariant = require("./models/ProductVariant");
 const VariantOption = require("./models/VariantOption");
+const Attribute = require("./models/Attribute");
 const Coupon = require("./models/Coupon");
 const Order = require("./models/Order");
 const OrderItem = require("./models/OrderItem");
@@ -54,6 +55,10 @@ ProductVariant.hasMany(VariantOption, { foreignKey: "variant_id" });
 
 // VariantOption associations
 VariantOption.belongsTo(ProductVariant, { foreignKey: "variant_id" });
+VariantOption.belongsTo(Attribute, { foreignKey: "attribute_name", targetKey: "attribute_name", as: 'Attribute' });
+
+// Attribute associations
+Attribute.hasMany(VariantOption, { foreignKey: "attribute_name", sourceKey: "attribute_name" });
 
 // Order associations
 Order.belongsTo(User, { foreignKey: "user_id" }); // as 'customer' nghe hay hơn user
