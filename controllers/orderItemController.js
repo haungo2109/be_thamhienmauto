@@ -32,8 +32,8 @@ exports.getOrderItem = async (req, res) => {
   try {
     const orderItem = await OrderItem.findByPk(req.params.id, {
       include: [
-        { model: require('../models/Order'), as: 'Order' },
-        { model: require('../models/Product'), as: 'Product' }
+        { model: Order, as: 'Order' },
+        { model: Product, as: 'Product' }
       ]
     });
     if (!orderItem) return res.status(404).json({ error: 'OrderItem not found' });

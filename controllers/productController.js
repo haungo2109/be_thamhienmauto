@@ -35,7 +35,7 @@ exports.getProducts = async (req, res) => {
 exports.getProduct = async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id, {
-      include: [{ model: require('../models/Category'), as: 'Category' }]
+      include: [{ model: Category, as: 'Category' }]
     });
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);

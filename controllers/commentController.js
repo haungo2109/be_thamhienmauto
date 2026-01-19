@@ -16,7 +16,7 @@ exports.getComments = async (req, res) => {
       req,
       include: [
         { model: Post, as: 'Post' },
-        { model: User, as: 'User', attributes: ['id', 'username', 'display_name'] },
+        { model: User, as: 'User', attributes: ['id', 'username', 'name'] },
         { model: Comment, as: 'parent' }
       ]
     });
@@ -30,8 +30,8 @@ exports.getComment = async (req, res) => {
   try {
     const comment = await Comment.findByPk(req.params.id, {
       include: [
-        { model: require('../models/Post'), as: 'Post' },
-        { model: require('../models/User'), as: 'User', attributes: ['id', 'username', 'display_name'] },
+        { model: Post, as: 'Post' },
+        { model: User, as: 'User', attributes: ['id', 'username', 'name'] },
         { model: Comment, as: 'parent' }
       ]
     });

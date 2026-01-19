@@ -28,7 +28,8 @@ CREATE TABLE users (
     username VARCHAR(60) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    display_name VARCHAR(250),
+    name VARCHAR(250),
+    phone VARCHAR(20),
     role user_role_type DEFAULT 'subscriber',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()

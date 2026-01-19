@@ -18,7 +18,7 @@ exports.getPosts = async (req, res) => {
     const result = await paginate(Post, {
       req,
       include: [
-        { model: User, as: 'User', attributes: ['id', 'username', 'display_name'] },
+        { model: User, as: 'User', attributes: ['id', 'username', 'name'] },
         { model: PostCategory, as: 'PostCategory' }
       ]
     });
@@ -32,7 +32,7 @@ exports.getPost = async (req, res) => {
   try {
     const post = await Post.findByPk(req.params.id, {
       include: [
-        { model: User, as: 'User', attributes: ['id', 'username', 'display_name'] },
+        { model: User, as: 'User', attributes: ['id', 'username', 'name'] },
         { model: PostCategory, as: 'PostCategory' }
       ]
     });

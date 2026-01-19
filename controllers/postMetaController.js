@@ -24,7 +24,7 @@ exports.getPostMetas = async (req, res) => {
 exports.getPostMeta = async (req, res) => {
   try {
     const postMeta = await PostMeta.findByPk(req.params.id, {
-      include: [{ model: require('../models/Post'), as: 'Post' }]
+      include: [{ model: Post, as: 'Post' }]
     });
     if (!postMeta) return res.status(404).json({ error: 'PostMeta not found' });
     res.json(postMeta);

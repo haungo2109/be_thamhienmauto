@@ -36,8 +36,8 @@ exports.getProductVariant = async (req, res) => {
   try {
     const productVariant = await ProductVariant.findByPk(req.params.id, {
       include: [
-        { model: require('../models/Product'), as: 'Product' },
-        { model: require('../models/VariantOption'), as: 'VariantOptions' }
+        { model: Product, as: 'Product' },
+        { model: VariantOption, as: 'VariantOptions' }
       ]
     });
     if (!productVariant) return res.status(404).json({ error: 'ProductVariant not found' });

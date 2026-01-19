@@ -29,7 +29,7 @@ exports.getProductImages = async (req, res) => {
 exports.getProductImage = async (req, res) => {
   try {
     const productImage = await ProductImage.findByPk(req.params.id, {
-      include: [{ model: require('../models/Product'), as: 'Product' }]
+      include: [{ model: Product, as: 'Product' }]
     });
     if (!productImage) return res.status(404).json({ error: 'ProductImage not found' });
     res.json(productImage);

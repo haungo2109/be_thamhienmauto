@@ -53,7 +53,7 @@ exports.getOrder = async (req, res) => {
   try {
     const order = await Order.findByPk(req.params.id, {
       include: [
-        { model: require('../models/User'), as: 'User', attributes: ['id', 'username', 'email'] },
+        { model: User, as: 'User', attributes: ['id', 'username', 'email'] },
         { model: OrderItem, as: 'OrderItems', include: [{ model: Product, as: 'Product' }] }
       ]
     });

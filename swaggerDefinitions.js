@@ -8,7 +8,7 @@
  *         id: { type: integer }
  *         username: { type: string }
  *         email: { type: string }
- *         display_name: { type: string }
+ *         name: { type: string }
  *         role: { type: string, enum: [admin, editor, author, subscriber] }
  *     Category:
  *       type: object
