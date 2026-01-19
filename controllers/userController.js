@@ -8,7 +8,8 @@ const createUserSchema = Joi.object({
   username: Joi.string().min(3).max(50).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
-  display_name: Joi.string().min(1).max(100).required()
+  display_name: Joi.string().min(1).max(100).required(),
+  phone: Joi.string().optional()
 });
 
 const loginSchema = Joi.object({
@@ -21,6 +22,7 @@ const updateUserSchema = Joi.object({
   email: Joi.string().email(),
   password: Joi.string().min(6),
   display_name: Joi.string().min(1).max(100),
+  phone: Joi.string().optional(),
   role: Joi.string().valid('user', 'admin') // Chỉ admin có thể thay đổi role
 });
 
@@ -53,12 +55,12 @@ exports.createUser = async (req, res) => {
     const { error } = createUserSchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details[0].message });
 
-    const { username, email, password, display_name } = req.body;
+    const { username, email, password, display_name, phone } = req.body;
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) return res.status(400).json({ error: 'Email already exists' });
 
     const password_hash = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, email, password_hash, display_name, role: 'subscriber' });
+    const user = await User.create({ username, email, password_hash, display_name, phone, role: 'subscriber' });
     const { password_hash: _, ...userWithoutPassword } = user.toJSON();
     res.status(201).json(userWithoutPassword);
   } catch (error) {
@@ -120,7 +122,8 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET);
-    res.json({ token });
+    const { password_hash: _, ...userInfo } = user.toJSON();
+    res.json({ token, ...userInfo });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
