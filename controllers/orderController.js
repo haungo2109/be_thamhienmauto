@@ -13,7 +13,8 @@ const createOrderSchema = Joi.object({
   shipping_address: Joi.string().min(1).required(),
   shipping_phone: Joi.string().min(1).max(20).required(),
   shipping_email: Joi.string().email(),
-  note: Joi.string()
+  note: Joi.string(),
+  payment_method: Joi.string().min(1).max(50).required() // New field validation
 });
 
 const updateOrderSchema = Joi.object({
@@ -24,7 +25,8 @@ const updateOrderSchema = Joi.object({
   shipping_address: Joi.string().min(1),
   shipping_phone: Joi.string().min(1).max(20),
   shipping_email: Joi.string().email(),
-  note: Joi.string()
+  note: Joi.string(),
+  payment_method: Joi.string().min(1).max(50) // New field validation, optional for updates
 });
 
 exports.getOrders = async (req, res) => {
