@@ -28,6 +28,11 @@ const authMiddleware = require("./middleware/auth");
 const errorHandler = require("./middleware/errorHandler");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpecs = require("./swagger");
+const popupRoutes = require('./routes/popups');
+const contactInfoRoutes = require('./routes/contact-info');
+const socialLinksRoutes = require('./routes/social-links');
+const shippingConfigRoutes = require('./routes/shipping-config');
+const shippingPartnersRoutes = require('./routes/shipping-partners');
 
 // Require associations after models
 require("./associations");
@@ -80,6 +85,11 @@ app.use("/api/product-variants", authMiddleware, productVariantRoutes);
 app.use("/api/variant-options", authMiddleware, variantOptionRoutes);
 app.use("/api/order-items", authMiddleware, orderItemRoutes);
 app.use("/api/attributes", authMiddleware, attributeRoutes);
+app.use('/api/popups', popupRoutes);
+app.use('/api/contact-info', contactInfoRoutes);
+app.use('/api/social-links', socialLinksRoutes);
+app.use('/api/shipping-config', shippingConfigRoutes);
+app.use('/api/shipping-partners', shippingPartnersRoutes);
 
 // Swagger docs route
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));

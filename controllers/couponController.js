@@ -4,7 +4,7 @@ const { paginate } = require('../utils/pagination');
 
 const couponSchema = Joi.object({
   code: Joi.string().min(1).max(50).required(),
-  discount_type: Joi.string().valid('fixed_cart', 'percent').required(),
+  discount_type: Joi.string().valid('fixed_cart', 'percent', 'free_ship').required(),
   amount: Joi.number().positive().required(),
   min_spend: Joi.number().min(0),
   usage_limit: Joi.number().integer().min(0),

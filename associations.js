@@ -12,6 +12,9 @@ const Attribute = require("./models/Attribute");
 const Coupon = require("./models/Coupon");
 const Order = require("./models/Order");
 const OrderItem = require("./models/OrderItem");
+const ContactInfo = require("./models/ContactInfo");
+const SocialLink = require("./models/SocialLink");
+const ShippingPartner = require("./models/ShippingPartner");
 
 // User associations
 User.hasMany(Post, { foreignKey: "author_id" });
@@ -67,7 +70,17 @@ Attribute.hasMany(VariantOption, { foreignKey: "attribute_name", sourceKey: "att
 // Order associations
 Order.belongsTo(User, { foreignKey: "user_id" }); // as 'customer' nghe hay hơn user
 Order.hasMany(OrderItem, { foreignKey: "order_id" });
+Order.belongsTo(ShippingPartner, { foreignKey: 'shipping_partner_id' }); // New association
 
 // OrderItem associations
 OrderItem.belongsTo(Order, { foreignKey: "order_id" });
 OrderItem.belongsTo(Product, { foreignKey: "product_id" });
+
+// ContactInfo associations
+ContactInfo.hasMany(SocialLink, { foreignKey: 'contact_id', onDelete: 'CASCADE' });
+
+// SocialLink associations
+SocialLink.belongsTo(ContactInfo, { foreignKey: 'contact_id' });
+
+// ShippingPartner associations
+ShippingPartner.hasMany(Order, { foreignKey: 'shipping_partner_id' }); // New association
