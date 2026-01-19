@@ -58,7 +58,7 @@ exports.createUser = async (req, res) => {
     if (existingUser) return res.status(400).json({ error: 'Email already exists' });
 
     const password_hash = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, email, password_hash, display_name, role: 'user' });
+    const user = await User.create({ username, email, password_hash, display_name, role: 'subscriber' });
     const { password_hash: _, ...userWithoutPassword } = user.toJSON();
     res.status(201).json(userWithoutPassword);
   } catch (error) {

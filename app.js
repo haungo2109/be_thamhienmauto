@@ -114,7 +114,7 @@ sequelize
   .then(() => {
     console.log("Database connected...");
     // Chỉ chạy sync khi cần thiết (ví dụ dev mode mới)
-    // return sequelize.sync({ alter: true });
+    // sequelize.sync({ alter: true });
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
