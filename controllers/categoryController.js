@@ -3,7 +3,9 @@ const Joi = require('joi');
 
 const categorySchema = Joi.object({
   name: Joi.string().min(1).max(100).required(),
-  description: Joi.string().max(500)
+  description: Joi.string().max(500),
+  image: Joi.string().max(255), // Optional field for image URL
+  icon: Joi.string().max(100)   // Optional field for icon name
 });
 
 exports.getCategories = async (req, res) => {
