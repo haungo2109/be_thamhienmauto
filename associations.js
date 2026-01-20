@@ -15,11 +15,13 @@ const OrderItem = require("./models/OrderItem");
 const ContactInfo = require("./models/ContactInfo");
 const SocialLink = require("./models/SocialLink");
 const ShippingPartner = require("./models/ShippingPartner");
+const CartItem = require("./models/CartItem");
 
 // User associations
 User.hasMany(Post, { foreignKey: "author_id" });
 User.hasMany(Comment, { foreignKey: "user_id" });
 User.hasMany(Order, { foreignKey: "user_id" });
+User.hasMany(CartItem, { foreignKey: "user_id" });
 
 // Category associations
 // --- Category ---
@@ -75,6 +77,11 @@ Order.belongsTo(ShippingPartner, { foreignKey: 'shipping_partner_id' }); // New 
 // OrderItem associations
 OrderItem.belongsTo(Order, { foreignKey: "order_id" });
 OrderItem.belongsTo(Product, { foreignKey: "product_id" });
+
+// CartItem associations
+CartItem.belongsTo(User, { foreignKey: "user_id" });
+CartItem.belongsTo(Product, { foreignKey: "product_id" });
+CartItem.belongsTo(ProductVariant, { foreignKey: "product_variant_id" });
 
 // ContactInfo associations
 ContactInfo.hasMany(SocialLink, { foreignKey: 'contact_id', onDelete: 'CASCADE' });

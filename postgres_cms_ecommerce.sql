@@ -196,6 +196,17 @@ CREATE TABLE order_items (
     subtotal DECIMAL(15, 2) NOT NULL
 );
 
+-- 16. Bảng Giỏ hàng (Cart Items)
+CREATE TABLE cart_items (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    product_id BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    product_variant_id BIGINT REFERENCES product_variants(id) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =================================================================
 -- PHẦN 5: KÍCH HOẠT TRIGGER (AUTO UPDATE TIME)
 -- =================================================================
@@ -205,6 +216,8 @@ CREATE TRIGGER update_users_modtime BEFORE UPDATE ON users FOR EACH ROW EXECUTE 
 CREATE TRIGGER update_posts_modtime BEFORE UPDATE ON posts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_products_modtime BEFORE UPDATE ON products FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_orders_modtime BEFORE UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_order_items_updated_at BEFORE UPDATE ON order_items FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER update_cart_items_updated_at BEFORE UPDATE ON cart_items FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 -- Tạo Index để tăng tốc độ tìm kiếm
 CREATE INDEX idx_posts_slug ON posts(slug);
