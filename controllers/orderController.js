@@ -4,6 +4,7 @@ const OrderItem = require('../models/OrderItem');
 const Product = require('../models/Product');
 const Joi = require('joi');
 const { paginate } = require('../utils/pagination');
+const { Op } = require('sequelize');
 
 const createOrderSchema = Joi.object({
   total_amount: Joi.number().positive().required(),
@@ -33,18 +34,71 @@ const updateOrderSchema = Joi.object({
 
 exports.getOrders = async (req, res) => {
   try {
+    const { status, q } = req.query;
     let where = {};
-    if (req.user.role !== 'admin') {
-      where.user_id = req.user.id;
+    
+    if (status) {
+      where.status = status;
+    }
+
+    if (q) {
+      where[Op.or] = [
+        { order_number: { [Op.iLike]: `%${q}%` } },
+        { shipping_name: { [Op.iLike]: `%${q}%` } },
+        { shipping_phone: { [Op.iLike]: `%${q}%` } },
+        { '$User.name$': { [Op.iLike]: `%${q}%` } },
+        { '$User.phone$': { [Op.iLike]: `%${q}%` } }
+      ];
     }
 
     const result = await paginate(Order, {
       req,
       where,
-      include: [{ model: User, as: 'User', attributes: ['id', 'email'] }]
+      include: [
+        { 
+          model: OrderItem, 
+          as: 'OrderItems', 
+          include: [{ model: Product, as: 'Product' }] 
+        },
+        { 
+          model: User, 
+          as: 'User', 
+          attributes: ['id', 'email', 'name', 'phone'] 
+        }
+      ],
+      order: [['created_at', 'DESC']]
     });
     res.json(result);
   } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.getMyOrders = async (req, res) => {
+  try {
+    const { status } = req.query;
+    let where = { user_id: req.user.id };
+    
+    if (status) {
+      where.status = status;
+    }
+
+    const result = await paginate(Order, {
+      req,
+      where,
+      include: [
+        { 
+          model: OrderItem, 
+          as: 'OrderItems', 
+          include: [{ model: Product, as: 'Product' }] 
+        }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+    res.json(result);
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
