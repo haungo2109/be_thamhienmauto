@@ -25,7 +25,6 @@ CREATE TYPE discount_type_enum AS ENUM ('fixed_cart', 'percent');
 -- 1. Bảng Người dùng
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
-    username VARCHAR(60) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     name VARCHAR(250),

@@ -5,7 +5,6 @@ const Joi = require('joi');
 const { paginate } = require('../utils/pagination');
 
 const createUserSchema = Joi.object({
-  username: Joi.string().min(3).max(50).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
   name: Joi.string().min(1).max(100).required(),
@@ -18,7 +17,6 @@ const loginSchema = Joi.object({
 });
 
 const updateUserSchema = Joi.object({
-  username: Joi.string().min(3).max(50),
   email: Joi.string().email(),
   password: Joi.string().min(6),
   name: Joi.string().min(1).max(100),
@@ -55,12 +53,12 @@ exports.createUser = async (req, res) => {
     const { error } = createUserSchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details[0].message });
 
-    const { username, email, password, name, phone } = req.body;
+    const { email, password, name, phone } = req.body;
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) return res.status(400).json({ error: 'Email already exists' });
 
     const password_hash = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, email, password_hash, name, phone, role: 'subscriber' });
+    const user = await User.create({ email, password_hash, name, phone, role: 'subscriber' });
     const { password_hash: _, ...userWithoutPassword } = user.toJSON();
     res.status(201).json(userWithoutPassword);
   } catch (error) {

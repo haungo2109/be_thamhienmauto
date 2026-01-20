@@ -41,7 +41,7 @@ exports.getOrders = async (req, res) => {
     const result = await paginate(Order, {
       req,
       where,
-      include: [{ model: User, as: 'User', attributes: ['id', 'username', 'email'] }]
+      include: [{ model: User, as: 'User', attributes: ['id', 'email'] }]
     });
     res.json(result);
   } catch (error) {
@@ -53,7 +53,7 @@ exports.getOrder = async (req, res) => {
   try {
     const order = await Order.findByPk(req.params.id, {
       include: [
-        { model: User, as: 'User', attributes: ['id', 'username', 'email'] },
+        { model: User, as: 'User', attributes: ['id', 'email'] },
         { model: OrderItem, as: 'OrderItems', include: [{ model: Product, as: 'Product' }] }
       ]
     });

@@ -16,7 +16,7 @@ exports.getComments = async (req, res) => {
       req,
       include: [
         { model: Post, as: 'Post' },
-        { model: User, as: 'User', attributes: ['id', 'username', 'name'] },
+        { model: User, as: 'User', attributes: ['id', 'name'] },
         { model: Comment, as: 'parent' }
       ]
     });
@@ -31,7 +31,7 @@ exports.getComment = async (req, res) => {
     const comment = await Comment.findByPk(req.params.id, {
       include: [
         { model: Post, as: 'Post' },
-        { model: User, as: 'User', attributes: ['id', 'username', 'name'] },
+        { model: User, as: 'User', attributes: ['id', 'name'] },
         { model: Comment, as: 'parent' }
       ]
     });
