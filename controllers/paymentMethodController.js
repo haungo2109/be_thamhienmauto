@@ -11,6 +11,15 @@ const paymentMethodSchema = Joi.object({
   config: Joi.object().default({})
 });
 
+const updatePaymentMethodSchema = Joi.object({
+  name: Joi.string().max(255),
+  type: Joi.string().max(50),
+  isActive: Joi.boolean(),
+  status: Joi.string().max(20),
+  description: Joi.string().allow('', null),
+  config: Joi.object()
+});
+
 exports.getPaymentMethods = async (req, res) => {
   try {
     // Mặc định chỉ lấy các phương thức đang hoạt động
@@ -51,6 +60,9 @@ exports.createPaymentMethod = async (req, res) => {
 
 exports.updatePaymentMethod = async (req, res) => {
   try {
+    const { error } = updatePaymentMethodSchema.validate(req.body);
+    if (error) return res.status(400).json({ error: error.details[0].message });
+
     const method = await PaymentMethod.findByPk(req.params.id);
     if (!method) return res.status(404).json({ error: 'Payment method not found' });
 
