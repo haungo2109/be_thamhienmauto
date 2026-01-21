@@ -5,6 +5,7 @@ const slugify = require('slugify');
 const { paginate } = require('../utils/pagination');
 const { uploadFile, deleteFile } = require('../utils/rustfs');
 const multer = require('multer');
+const { Op } = require('sequelize');
 
 // Configure multer for memory storage
 const upload = multer({ storage: multer.memoryStorage() });
@@ -22,12 +23,85 @@ const productSchema = Joi.object({
 
 exports.getProducts = async (req, res) => {
   try {
+    const { category_id, q, stock_status, min_price, max_price, sort } = req.query;
+    let where = {};
+
+    if (category_id) where.category_id = category_id;
+    if (stock_status) where.stock_status = stock_status;
+    
+    if (q) {
+      where.name = { [Op.iLike]: `%${q}%` };
+    }
+
+    if (min_price || max_price) {
+      where.price = {};
+      if (min_price) where.price[Op.gte] = parseFloat(min_price);
+      if (max_price) where.price[Op.lte] = parseFloat(max_price);
+    }
+
+    let order = [['created_at', 'DESC']];
+    if (sort) {
+      switch (sort) {
+        case 'price_asc': order = [['price', 'ASC']]; break;
+        case 'price_desc': order = [['price', 'DESC']]; break;
+        case 'oldest': order = [['created_at', 'ASC']]; break;
+        case 'best_selling': order = [['created_at', 'DESC']]; break; // Cần thêm field sales_count để thực tế hơn
+        default: order = [['created_at', 'DESC']];
+      }
+    }
+
     const result = await paginate(Product, {
       req,
-      include: [{ model: Category, as: 'Category' }]
+      where,
+      include: [{ model: Category, as: 'Category' }],
+      order
     });
     res.json(result);
   } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.getProductsByCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { q, stock_status, min_price, max_price, sort } = req.query;
+    
+    let categoryWhere = isNaN(id) ? { slug: id } : { id: id };
+    const category = await Category.findOne({ where: categoryWhere });
+    if (!category) return res.status(404).json({ error: 'Category not found' });
+
+    let where = { category_id: category.id };
+    if (stock_status) where.stock_status = stock_status;
+    if (q) where.name = { [Op.iLike]: `%${q}%` };
+
+    if (min_price || max_price) {
+      where.price = {};
+      if (min_price) where.price[Op.gte] = parseFloat(min_price);
+      if (max_price) where.price[Op.lte] = parseFloat(max_price);
+    }
+
+    let order = [['created_at', 'DESC']];
+    if (sort) {
+      switch (sort) {
+        case 'price_asc': order = [['price', 'ASC']]; break;
+        case 'price_desc': order = [['price', 'DESC']]; break;
+        case 'oldest': order = [['created_at', 'ASC']]; break;
+        case 'best_selling': order = [['created_at', 'DESC']]; break;
+        default: order = [['created_at', 'DESC']];
+      }
+    }
+
+    const result = await paginate(Product, {
+      req,
+      where,
+      include: [{ model: Category, as: 'Category' }],
+      order
+    });
+    res.json(result);
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
