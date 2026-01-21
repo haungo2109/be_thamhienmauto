@@ -51,8 +51,8 @@ PostMeta.belongsTo(Post, { foreignKey: "post_id" });
 
 // Product associations
 Product.belongsTo(Category, { foreignKey: "category_id" });
-Product.hasMany(ProductImage, { foreignKey: "product_id" });
-Product.hasMany(ProductVariant, { foreignKey: "product_id" });
+Product.hasMany(ProductImage, { foreignKey: "product_id", as: 'ProductImages' });
+Product.hasMany(ProductVariant, { foreignKey: "product_id", as: 'ProductVariants' });
 Product.hasMany(OrderItem, { foreignKey: "product_id" }); // Không cần as ở đây lắm vì ít khi query ngược từ Product ra OrderItem để hiển thị
 
 // ProductImage associations
@@ -60,7 +60,7 @@ ProductImage.belongsTo(Product, { foreignKey: "product_id" });
 
 // ProductVariant associations
 ProductVariant.belongsTo(Product, { foreignKey: "product_id" });
-ProductVariant.hasMany(VariantOption, { foreignKey: "variant_id" });
+ProductVariant.hasMany(VariantOption, { foreignKey: "variant_id", as: 'VariantOptions' });
 
 // VariantOption associations
 VariantOption.belongsTo(ProductVariant, { foreignKey: "variant_id" });

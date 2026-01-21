@@ -1,6 +1,7 @@
 const CartItem = require('../models/CartItem');
 const Product = require('../models/Product');
 const ProductVariant = require('../models/ProductVariant');
+const VariantOption = require('../models/VariantOption');
 const Joi = require('joi');
 const { paginate } = require('../utils/pagination');
 
@@ -22,7 +23,14 @@ exports.getCart = async (req, res) => {
         },
         {
           model: ProductVariant,
-          attributes: ['id', 'price', 'stock_quantity']
+          attributes: ['id', 'price', 'stock_quantity'],
+          include: [
+            {
+              model: VariantOption,
+              as: 'VariantOptions',
+              attributes: ['attribute_name', 'attribute_value', 'affects_price']
+            }
+          ]
         }
       ],
       order: [['created_at', 'DESC']]

@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
+const ProductImage = require('../models/ProductImage');
 const Joi = require('joi');
 const slugify = require('slugify');
 const { paginate } = require('../utils/pagination');
@@ -108,12 +109,33 @@ exports.getProductsByCategory = async (req, res) => {
 
 exports.getProduct = async (req, res) => {
   try {
-    const product = await Product.findByPk(req.params.id, {
-      include: [{ model: Category, as: 'Category' }]
+    const { id } = req.params;
+    const where = isNaN(id) ? { slug: id } : { id: id };
+
+    const product = await Product.findOne({
+      where,
+      include: [
+        { model: Category, as: 'Category' },
+        { 
+          model: ProductImage, 
+          as: 'ProductImages',
+        }
+      ],
+      order: [
+        [{ model: ProductImage, as: 'ProductImages' }, 'display_order', 'ASC']
+      ]
     });
+    
     if (!product) return res.status(404).json({ error: 'Product not found' });
-    res.json(product);
+
+    // Transform ProductImages to simple string array
+    const productData = product.toJSON();
+    productData.images = (productData.ProductImages || []).map(img => img.image_url);
+    delete productData.ProductImages;
+
+    res.json(productData);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
