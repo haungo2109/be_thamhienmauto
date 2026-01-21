@@ -164,23 +164,19 @@ CREATE TABLE coupons (
 -- 12. Bảng Đơn hàng (Orders)
 CREATE TABLE orders (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT DEFAULT NULL REFERENCES users(id) ON DELETE SET NULL,
+    user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
     order_number VARCHAR(50) NOT NULL UNIQUE,
     status order_status_type DEFAULT 'pending',
-    
-    total_amount DECIMAL(15, 2) NOT NULL,
-    
-    -- Thông tin giảm giá
-    coupon_code VARCHAR(50) DEFAULT NULL,
-    discount_amount DECIMAL(15, 2) DEFAULT 0.00,
-
-    -- Thông tin giao hàng (Snapshot)
+    total_amount DECIMAL(15,2) NOT NULL,
+    coupon_code VARCHAR(50),
+    discount_amount DECIMAL(15,2) DEFAULT 0.00,
     shipping_name VARCHAR(255) NOT NULL,
     shipping_address TEXT NOT NULL,
     shipping_phone VARCHAR(20) NOT NULL,
     shipping_email VARCHAR(100),
     note TEXT,
-    
+    payment_method_id VARCHAR(50) NOT NULL REFERENCES payment_methods(id),
+    shipping_partner_id BIGINT REFERENCES shipping_partners(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -220,6 +216,19 @@ CREATE TABLE user_addresses (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 18. Bảng Phương thức thanh toán
+CREATE TABLE payment_methods (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) DEFAULT 'manual',
+    "isActive" BOOLEAN DEFAULT TRUE,
+    status VARCHAR(20) DEFAULT 'active',
+    description TEXT,
+    config JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =================================================================
 -- PHẦN 5: KÍCH HOẠT TRIGGER (AUTO UPDATE TIME)
 -- =================================================================
@@ -232,6 +241,7 @@ CREATE TRIGGER update_orders_modtime BEFORE UPDATE ON orders FOR EACH ROW EXECUT
 CREATE TRIGGER update_order_items_updated_at BEFORE UPDATE ON order_items FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 CREATE TRIGGER update_cart_items_updated_at BEFORE UPDATE ON cart_items FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 CREATE TRIGGER update_user_addresses_updated_at BEFORE UPDATE ON user_addresses FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER update_payment_methods_updated_at BEFORE UPDATE ON payment_methods FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 -- Tạo Index để tăng tốc độ tìm kiếm
 CREATE INDEX idx_posts_slug ON posts(slug);
@@ -239,3 +249,7 @@ CREATE INDEX idx_products_slug ON products(slug);
 CREATE INDEX idx_products_price ON products(price);
 CREATE INDEX idx_orders_order_number ON orders(order_number);
 CREATE INDEX idx_coupons_code ON coupons(code);
+
+-- Seed mặc định COD
+INSERT INTO payment_methods (id, name, type, "isActive", status, description, config)
+VALUES ('cod', 'Thanh toán khi nhận hàng (COD)', 'manual', TRUE, 'active', 'Khách hàng thanh toán tiền mặt trực tiếp cho shipper khi nhận hàng.', '{}');

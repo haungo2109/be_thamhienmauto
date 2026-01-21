@@ -35,6 +35,7 @@ const shippingConfigRoutes = require('./routes/shipping-config');
 const shippingPartnersRoutes = require('./routes/shipping-partners');
 const cartRoutes = require('./routes/cart');
 const addressRoutes = require('./routes/users-addresses');
+const paymentMethodRoutes = require('./routes/payment-methods');
 
 // Require associations after models
 require("./associations");
@@ -94,6 +95,7 @@ app.use('/api/shipping-config', shippingConfigRoutes);
 app.use('/api/shipping-partners', shippingPartnersRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/user-addresses', addressRoutes);
+app.use('/api/payment-methods', paymentMethodRoutes);
 
 // Swagger docs route
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));

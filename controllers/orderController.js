@@ -18,7 +18,7 @@ const createOrderSchema = Joi.object({
   shipping_phone: Joi.string().min(1).max(20).required(),
   shipping_email: Joi.string().email().allow('', null),
   note: Joi.string().allow('', null),
-  payment_method: Joi.string().min(1).max(50).required(),
+  payment_method_id: Joi.string().min(1).max(50).required(),
   shipping_partner_id: Joi.number().integer().allow(null)
 });
 
@@ -31,7 +31,7 @@ const updateOrderSchema = Joi.object({
   shipping_phone: Joi.string().min(1).max(20),
   shipping_email: Joi.string().email(),
   note: Joi.string(),
-  payment_method: Joi.string().min(1).max(50), // New field validation, optional for updates
+  payment_method_id: Joi.string().min(1).max(50), // New field validation, optional for updates
   shipping_partner_id: Joi.number().integer() // Optional field
 });
 
@@ -138,7 +138,7 @@ exports.createOrder = async (req, res) => {
       shipping_phone, 
       shipping_email, 
       note, 
-      payment_method,
+      payment_method_id,
       shipping_partner_id 
     } = req.body;
 
@@ -253,7 +253,7 @@ exports.createOrder = async (req, res) => {
       shipping_phone,
       shipping_email,
       note,
-      payment_method,
+      payment_method_id,
       shipping_partner_id,
       status: 'pending'
     }, { transaction: t });

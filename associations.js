@@ -17,6 +17,7 @@ const SocialLink = require("./models/SocialLink");
 const ShippingPartner = require("./models/ShippingPartner");
 const CartItem = require("./models/CartItem");
 const UserAddress = require("./models/UserAddress");
+const PaymentMethod = require("./models/PaymentMethod");
 
 // User associations
 User.hasMany(Post, { foreignKey: "author_id" });
@@ -75,6 +76,7 @@ Attribute.hasMany(VariantOption, { foreignKey: "attribute_name", sourceKey: "att
 Order.belongsTo(User, { foreignKey: "user_id" }); // as 'customer' nghe hay hơn user
 Order.hasMany(OrderItem, { foreignKey: "order_id" });
 Order.belongsTo(ShippingPartner, { foreignKey: 'shipping_partner_id' }); // New association
+Order.belongsTo(PaymentMethod, { foreignKey: 'payment_method_id' });
 
 // OrderItem associations
 OrderItem.belongsTo(Order, { foreignKey: "order_id" });
@@ -96,3 +98,6 @@ SocialLink.belongsTo(ContactInfo, { foreignKey: 'contact_id' });
 
 // ShippingPartner associations
 ShippingPartner.hasMany(Order, { foreignKey: 'shipping_partner_id' }); // New association
+
+// PaymentMethod associations
+PaymentMethod.hasMany(Order, { foreignKey: 'payment_method_id' });

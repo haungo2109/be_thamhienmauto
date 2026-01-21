@@ -14,7 +14,7 @@ const Order = sequelize.define('Order', {
   shipping_phone: { type: DataTypes.STRING(20), allowNull: false },
   shipping_email: { type: DataTypes.STRING(100) },
   note: { type: DataTypes.TEXT },
-  payment_method: { type: DataTypes.STRING(50), allowNull: false },
+  payment_method_id: { type: DataTypes.STRING(50), allowNull: false },
   shipping_partner_id: { type: DataTypes.BIGINT }, // New field for shipping partner
   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
