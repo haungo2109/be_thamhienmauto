@@ -24,6 +24,11 @@ const updateUserSchema = Joi.object({
   role: Joi.string().valid('user', 'admin') // Chỉ admin có thể thay đổi role
 });
 
+const changePasswordSchema = Joi.object({
+  oldPassword: Joi.string().required(),
+  newPassword: Joi.string().min(6).required()
+});
+
 exports.getUsers = async (req, res) => {
   try {
     const result = await paginate(User, {
@@ -122,6 +127,27 @@ exports.login = async (req, res) => {
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET);
     const { password_hash: _, ...userInfo } = user.toJSON();
     res.json({ token, ...userInfo });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { error } = changePasswordSchema.validate(req.body);
+    if (error) return res.status(400).json({ error: error.details[0].message });
+
+    const { oldPassword, newPassword } = req.body;
+    const user = await User.findByPk(req.user.id);
+
+    if (!user || !await bcrypt.compare(oldPassword, user.password_hash)) {
+      return res.status(400).json({ error: 'Incorrect old password' });
+    }
+
+    user.password_hash = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ message: 'Password changed successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
