@@ -207,6 +207,19 @@ CREATE TABLE cart_items (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 17. Bảng Địa chỉ người dùng
+CREATE TABLE user_addresses (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    receiver_name VARCHAR(255) NOT NULL,
+    receiver_phone VARCHAR(20) NOT NULL,
+    address TEXT NOT NULL,
+    address_type VARCHAR(20) CHECK (address_type IN ('home', 'office')) DEFAULT 'home',
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =================================================================
 -- PHẦN 5: KÍCH HOẠT TRIGGER (AUTO UPDATE TIME)
 -- =================================================================
@@ -218,6 +231,7 @@ CREATE TRIGGER update_products_modtime BEFORE UPDATE ON products FOR EACH ROW EX
 CREATE TRIGGER update_orders_modtime BEFORE UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_order_items_updated_at BEFORE UPDATE ON order_items FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 CREATE TRIGGER update_cart_items_updated_at BEFORE UPDATE ON cart_items FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE TRIGGER update_user_addresses_updated_at BEFORE UPDATE ON user_addresses FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 -- Tạo Index để tăng tốc độ tìm kiếm
 CREATE INDEX idx_posts_slug ON posts(slug);
