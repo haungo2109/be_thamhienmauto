@@ -141,7 +141,7 @@ CREATE TABLE variant_options (
     id BIGSERIAL PRIMARY KEY,
     variant_id BIGINT NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,
     attribute_name VARCHAR(50) NOT NULL REFERENCES attribute(attribute_name) ON DELETE CASCADE,
-    attribute_value VARCHAR(50) NOT NULL -- "Red"
+    attribute_value VARCHAR(50) NOT NULL,    affects_price BOOLEAN DEFAULT TRUE,    UNIQUE (variant_id, attribute_name)
 );
 
 -- =================================================================

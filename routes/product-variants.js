@@ -8,8 +8,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const router = express.Router();
 
-router.get('/', adminAuth, getProductVariants);
-router.get('/:id', adminAuth, getProductVariant);
+router.get('/:id', getProductVariant);
 router.post('/', adminAuth, upload.single('image'), createProductVariant);
 router.put('/:id', adminAuth, updateProductVariant);
 router.delete('/:id', adminAuth, deleteProductVariant);

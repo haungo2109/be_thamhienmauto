@@ -2,6 +2,7 @@ const CartItem = require('../models/CartItem');
 const Product = require('../models/Product');
 const ProductVariant = require('../models/ProductVariant');
 const Joi = require('joi');
+const { paginate } = require('../utils/pagination');
 
 const cartItemSchema = Joi.object({
   product_id: Joi.number().required(),
@@ -11,7 +12,8 @@ const cartItemSchema = Joi.object({
 
 exports.getCart = async (req, res) => {
   try {
-    const items = await CartItem.findAll({
+    const result = await paginate(CartItem, {
+      req,
       where: { user_id: req.user.id },
       include: [
         { 
@@ -20,12 +22,12 @@ exports.getCart = async (req, res) => {
         },
         {
           model: ProductVariant,
-          attributes: ['id', 'variant_name', 'price', 'stock_quantity']
+          attributes: ['id', 'price', 'stock_quantity']
         }
       ],
       order: [['created_at', 'DESC']]
     });
-    res.json(items);
+    res.json(result);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });

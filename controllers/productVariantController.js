@@ -4,10 +4,7 @@ const VariantOption = require('../models/VariantOption');
 const Joi = require('joi');
 const { paginate } = require('../utils/pagination');
 const { uploadFile, deleteFile } = require('../utils/rustfs');
-const multer = require('multer');
 
-// Configure multer for memory storage
-const upload = multer({ storage: multer.memoryStorage() });
 
 const productVariantSchema = Joi.object({
   product_id: Joi.number().integer().required(),
@@ -19,14 +16,15 @@ const productVariantSchema = Joi.object({
 
 exports.getProductVariants = async (req, res) => {
   try {
-    const result = await paginate(ProductVariant, {
-      req,
+    const product_id = req.params.id;
+    
+    const variants = await ProductVariant.findAll({
+      where: { product_id },
       include: [
-        { model: Product, as: 'Product' },
         { model: VariantOption, as: 'VariantOptions' }
       ]
     });
-    res.json(result);
+    res.json(variants);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
