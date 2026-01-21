@@ -68,3 +68,61 @@ exports.deleteCoupon = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+exports.applyCoupon = async (req, res) => {
+  try {
+    const { code, cartTotal } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ error: 'Coupon code is required' });
+    }
+
+    const coupon = await Coupon.findOne({ where: { code } });
+
+    if (!coupon) {
+      return res.status(404).json({ error: 'Mã giảm giá không tồn tại' });
+    }
+
+    // Kiểm tra ngày hết hạn
+    if (coupon.expiry_date && new Date(coupon.expiry_date) < new Date()) {
+      return res.status(400).json({ error: 'Mã giảm giá đã hết hạn' });
+    }
+
+    // Kiểm tra giới hạn sử dụng
+    if (coupon.usage_limit > 0 && coupon.usage_count >= coupon.usage_limit) {
+      return res.status(400).json({ error: 'Mã giảm giá đã hết lượt sử dụng' });
+    }
+
+    // Kiểm tra mức chi tiêu tối thiểu
+    if (coupon.min_spend > 0 && cartTotal < parseFloat(coupon.min_spend)) {
+      return res.status(400).json({ 
+        error: `Mã này chỉ áp dụng cho đơn hàng từ ${parseFloat(coupon.min_spend).toLocaleString('vi-VN')}đ trở lên` 
+      });
+    }
+
+    let discountAmount = 0;
+    if (coupon.discount_type === 'fixed_cart') {
+      discountAmount = parseFloat(coupon.amount);
+    } else if (coupon.discount_type === 'percent') {
+      discountAmount = (cartTotal * parseFloat(coupon.amount)) / 100;
+    } else if (coupon.discount_type === 'free_ship') {
+      // Logic free ship thường được xử lý ở phí vận chuyển, 
+      // ở đây trả về 0 hoặc đánh dấu là free_ship
+      discountAmount = 0; 
+    }
+
+    res.json({
+      success: true,
+      coupon: {
+        code: coupon.code,
+        discount_type: coupon.discount_type,
+        amount: parseFloat(coupon.amount),
+        discount_amount: discountAmount
+      }
+    });
+
+  } catch (error) {
+    console.error('Apply coupon error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
