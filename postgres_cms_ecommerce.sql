@@ -15,7 +15,7 @@ $$ language 'plpgsql';
 CREATE TYPE user_role_type AS ENUM ('admin', 'editor', 'author', 'subscriber');
 CREATE TYPE post_status_type AS ENUM ('published', 'draft', 'archived');
 CREATE TYPE stock_status_type AS ENUM ('in_stock', 'out_of_stock', 'backorder');
-CREATE TYPE order_status_type AS ENUM ('pending', 'processing', 'completed', 'cancelled', 'refunded');
+CREATE TYPE order_status_type AS ENUM ('pending', 'processing', 'shipped', 'completed', 'cancelled', 'returned');
 CREATE TYPE discount_type_enum AS ENUM ('fixed_cart', 'percent');
 
 -- =================================================================
@@ -167,9 +167,12 @@ CREATE TABLE orders (
     user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
     order_number VARCHAR(50) NOT NULL UNIQUE,
     status order_status_type DEFAULT 'pending',
-    total_amount DECIMAL(15,2) NOT NULL,
+    sub_total DECIMAL(15,2) DEFAULT 0.00,
+    shipping_fee DECIMAL(15,2) DEFAULT 0.00,
+    tax_amount DECIMAL(15,2) DEFAULT 0.00,
     coupon_code VARCHAR(50),
     discount_amount DECIMAL(15,2) DEFAULT 0.00,
+    total_amount DECIMAL(15,2) NOT NULL,
     shipping_name VARCHAR(255) NOT NULL,
     shipping_address TEXT NOT NULL,
     shipping_phone VARCHAR(20) NOT NULL,
@@ -177,6 +180,9 @@ CREATE TABLE orders (
     note TEXT,
     payment_method_id VARCHAR(50) NOT NULL REFERENCES payment_methods(id),
     shipping_partner_id BIGINT REFERENCES shipping_partners(id),
+    tracking_number VARCHAR(100),
+    cancelled_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

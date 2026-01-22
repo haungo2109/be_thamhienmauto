@@ -48,7 +48,10 @@
  *         id: { type: integer }
  *         user_id: { type: integer }
  *         order_number: { type: string }
- *         status: { type: string, enum: [pending, processing, completed, cancelled, refunded] }
+ *         status: { type: string, enum: [pending, processing, shipped, completed, cancelled, returned] }
+ *         sub_total: { type: number }
+ *         shipping_fee: { type: number }
+ *         tax_amount: { type: number }
  *         total_amount: { type: number }
  *         coupon_code: { type: string }
  *         discount_amount: { type: number }
@@ -57,6 +60,11 @@
  *         shipping_phone: { type: string }
  *         shipping_email: { type: string }
  *         note: { type: string }
+ *         payment_method_id: { type: string }
+ *         shipping_partner_id: { type: integer }
+ *         tracking_number: { type: string }
+ *         cancelled_at: { type: string, format: date-time }
+ *         completed_at: { type: string, format: date-time }
  *     Coupon:
  *       type: object
  *       properties:
@@ -117,6 +125,10 @@
  *         order_id: { type: integer }
  *         product_id: { type: integer }
  *         product_name: { type: string }
+ *         variant_id: { type: integer }
+ *         variant_name: { type: string }
+ *         sku: { type: string }
+ *         thumbnail_url: { type: string }
  *         quantity: { type: integer }
  *         unit_price: { type: number }
  *         subtotal: { type: number }

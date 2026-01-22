@@ -9,6 +9,7 @@ const Joi = require('joi');
 const { paginate } = require('../utils/pagination');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
+const VariantOption = require('../models/VariantOption');
 
 const createOrderSchema = Joi.object({
   cart_item_ids: Joi.array().items(Joi.number().integer()).min(1).required(),
@@ -19,11 +20,13 @@ const createOrderSchema = Joi.object({
   shipping_email: Joi.string().email().allow('', null),
   note: Joi.string().allow('', null),
   payment_method_id: Joi.string().min(1).max(50).required(),
-  shipping_partner_id: Joi.number().integer().allow(null)
+  shipping_partner_id: Joi.number().integer().allow(null),
+  shipping_fee: Joi.number().min(0).default(0),
+  tax_amount: Joi.number().min(0).default(0)
 });
 
 const updateOrderSchema = Joi.object({
-  status: Joi.string().valid('pending', 'processing', 'completed', 'cancelled', 'refunded'),
+  status: Joi.string().valid('pending', 'processing', 'shipped', 'completed', 'cancelled', 'returned'),
   total_amount: Joi.number().positive(),
   discount_amount: Joi.number().min(0),
   shipping_name: Joi.string().min(1).max(255),
@@ -31,8 +34,11 @@ const updateOrderSchema = Joi.object({
   shipping_phone: Joi.string().min(1).max(20),
   shipping_email: Joi.string().email(),
   note: Joi.string(),
-  payment_method_id: Joi.string().min(1).max(50), // New field validation, optional for updates
-  shipping_partner_id: Joi.number().integer() // Optional field
+  payment_method_id: Joi.string().min(1).max(50), 
+  shipping_partner_id: Joi.number().integer(),
+  tracking_number: Joi.string().allow('', null),
+  shipping_fee: Joi.number().min(0),
+  tax_amount: Joi.number().min(0)
 });
 
 exports.getOrders = async (req, res) => {
@@ -41,7 +47,8 @@ exports.getOrders = async (req, res) => {
     let where = {};
     
     if (status) {
-      where.status = status;
+      const statusArray = Array.isArray(status) ? status : status.split(',');
+      where.status = { [Op.in]: statusArray };
     }
 
     if (q) {
@@ -84,7 +91,8 @@ exports.getMyOrders = async (req, res) => {
     let where = { user_id: req.user.id };
     
     if (status) {
-      where.status = status;
+      const statusArray = Array.isArray(status) ? status : status.split(',');
+      where.status = { [Op.in]: statusArray };
     }
 
     const result = await paginate(Order, {
@@ -139,7 +147,9 @@ exports.createOrder = async (req, res) => {
       shipping_email, 
       note, 
       payment_method_id,
-      shipping_partner_id 
+      shipping_partner_id,
+      shipping_fee = 0,
+      tax_amount = 0
     } = req.body;
 
     // 1. Lấy các sản phẩm được chọn trong giỏ hàng
@@ -175,12 +185,24 @@ exports.createOrder = async (req, res) => {
     for (const item of cartItems) {
       let unitPrice = 0;
       let productName = item.Product.name;
+      let variantId = null;
+      let variantName = null;
+      let sku = item.Product.sku;
+      let thumbnailUrl = item.Product.image_url;
 
       if (item.ProductVariant) {
         unitPrice = parseFloat(item.ProductVariant.price);
-        // Ghép tên các option vào tên sản phẩm (VD: Áo thun - Đỏ, L)
-        const options = item.ProductVariant.VariantOptions.map(o => o.attribute_value).join(', ');
-        if (options) productName += ` - ${options}`;
+        variantId = item.ProductVariant.id;
+        sku = item.ProductVariant.sku || item.Product.sku;
+        thumbnailUrl = item.ProductVariant.image_url || item.Product.image_url;
+        
+        // Ghép tên các option vào variant_name
+        const options = item.ProductVariant.VariantOptions
+          .filter(o => o.affects_price)
+          .map(o => `${o.attribute_name}: ${o.attribute_value}`)
+          .join(', ');
+        
+        variantName = options || null;
       } else {
         unitPrice = parseFloat(item.Product.sale_price || item.Product.price);
       }
@@ -191,6 +213,10 @@ exports.createOrder = async (req, res) => {
       orderItemsData.push({
         product_id: item.product_id,
         product_name: productName,
+        variant_id: variantId,
+        variant_name: variantName,
+        sku: sku,
+        thumbnail_url: thumbnailUrl,
         quantity: item.quantity,
         unit_price: unitPrice,
         subtotal: itemSubtotal
@@ -238,13 +264,16 @@ exports.createOrder = async (req, res) => {
       if (discountAmount > subtotal) discountAmount = subtotal;
     }
 
-    const totalAmount = subtotal - discountAmount;
+    const totalAmount = subtotal - discountAmount + parseFloat(shipping_fee) + parseFloat(tax_amount);
 
     // 4. Tạo đơn hàng
     const orderNumber = 'ORD-' + Date.now() + Math.floor(Math.random() * 1000);
     const order = await Order.create({
       user_id: req.user.id,
       order_number: orderNumber,
+      sub_total: subtotal,
+      shipping_fee: shipping_fee,
+      tax_amount: tax_amount,
       total_amount: totalAmount,
       coupon_code: validatedCoupon ? validatedCoupon.code : null,
       discount_amount: discountAmount,
@@ -309,7 +338,17 @@ exports.updateOrder = async (req, res) => {
       });
       await order.update(updateData);
     } else {
-      await order.update(req.body);
+      const updateData = { ...req.body };
+      
+      // Update timestamps based on status change
+      if (req.body.status === 'cancelled' && order.status !== 'cancelled') {
+        updateData.cancelled_at = new Date();
+      }
+      if (req.body.status === 'completed' && order.status !== 'completed') {
+        updateData.completed_at = new Date();
+      }
+
+      await order.update(updateData);
     }
     res.json(order);
   } catch (error) {

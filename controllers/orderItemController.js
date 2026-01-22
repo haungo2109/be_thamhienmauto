@@ -6,8 +6,12 @@ const { paginate } = require('../utils/pagination');
 
 const orderItemSchema = Joi.object({
   order_id: Joi.number().integer().required(),
-  product_id: Joi.number().integer().required(),
+  product_id: Joi.number().integer().allow(null),
   product_name: Joi.string().min(1).max(255).required(),
+  variant_id: Joi.number().integer().allow(null),
+  variant_name: Joi.string().max(255).allow('', null),
+  sku: Joi.string().max(100).allow('', null),
+  thumbnail_url: Joi.string().allow('', null),
   quantity: Joi.number().integer().positive().required(),
   unit_price: Joi.number().positive().required(),
   subtotal: Joi.number().positive().required()

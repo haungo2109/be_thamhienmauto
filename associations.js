@@ -81,6 +81,7 @@ Order.belongsTo(PaymentMethod, { foreignKey: 'payment_method_id' });
 // OrderItem associations
 OrderItem.belongsTo(Order, { foreignKey: "order_id" });
 OrderItem.belongsTo(Product, { foreignKey: "product_id" });
+OrderItem.belongsTo(ProductVariant, { foreignKey: "variant_id" });
 
 // CartItem associations
 CartItem.belongsTo(User, { foreignKey: "user_id" });
