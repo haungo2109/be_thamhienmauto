@@ -27,10 +27,16 @@ const productSchema = Joi.object({
 
 exports.getProducts = async (req, res) => {
   try {
-    const { category_id, q, stock_status, min_price, max_price, sort, brand, model } = req.query;
+    const { categoryIdOrSlug, q, stock_status, min_price, max_price, sort, brand, model } = req.query;
     let where = {};
 
-    if (category_id) where.category_id = category_id;
+    if (categoryIdOrSlug) {
+      let categoryWhere = isNaN(categoryIdOrSlug) ? { slug: categoryIdOrSlug } : { id: categoryIdOrSlug };
+      const category = await Category.findOne({ where: categoryWhere });
+      if (!category) return res.json({ data: [], total: 0, page: 1, limit: 10, totalPages: 0 });
+      where.category_id = category.id;
+    }
+    
     if (stock_status) where.stock_status = stock_status;
     
     if (q) {
@@ -63,62 +69,6 @@ exports.getProducts = async (req, res) => {
         case 'price_desc': order = [['price', 'DESC']]; break;
         case 'oldest': order = [['created_at', 'ASC']]; break;
         case 'best_selling': order = [['created_at', 'DESC']]; break; // Cần thêm field sales_count để thực tế hơn
-        default: order = [['created_at', 'DESC']];
-      }
-    }
-
-    const result = await paginate(Product, {
-      req,
-      where,
-      include: [{ model: Category, as: 'Category' }],
-      order
-    });
-    res.json(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-exports.getProductsByCategory = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { q, stock_status, min_price, max_price, sort, brand, model } = req.query;
-    
-    let categoryWhere = isNaN(id) ? { slug: id } : { id: id };
-    const category = await Category.findOne({ where: categoryWhere });
-    if (!category) return res.status(404).json({ error: 'Category not found' });
-
-    let where = { category_id: category.id };
-    if (stock_status) where.stock_status = stock_status;
-    if (q) where.name = { [Op.iLike]: `%${q}%` };
-
-    if (min_price || max_price) {
-      where.price = {};
-      if (min_price) where.price[Op.gte] = parseFloat(min_price);
-      if (max_price) where.price[Op.lte] = parseFloat(max_price);
-    }
-
-    if (brand || model) {
-      const brandFilter = brand ? `AND EXISTS (SELECT 1 FROM "${VariantOption.getTableName()}" AS vo WHERE vo.variant_id = pv.id AND vo.attribute_name = 'Hãng xe' AND vo.attribute_value = ${sequelize.escape(brand)})` : '';
-      const modelFilter = model ? `AND EXISTS (SELECT 1 FROM "${VariantOption.getTableName()}" AS vo WHERE vo.variant_id = pv.id AND vo.attribute_name = 'Dòng xe' AND vo.attribute_value = ${sequelize.escape(model)})` : '';
-      
-      where[Op.and] = where[Op.and] || [];
-      where[Op.and].push(sequelize.literal(`EXISTS (
-        SELECT 1 FROM "${ProductVariant.getTableName()}" AS pv
-        WHERE pv.product_id = "Product".id
-        ${brandFilter}
-        ${modelFilter}
-      )`));
-    }
-
-    let order = [['created_at', 'DESC']];
-    if (sort) {
-      switch (sort) {
-        case 'price_asc': order = [['price', 'ASC']]; break;
-        case 'price_desc': order = [['price', 'DESC']]; break;
-        case 'oldest': order = [['created_at', 'ASC']]; break;
-        case 'best_selling': order = [['created_at', 'DESC']]; break;
         default: order = [['created_at', 'DESC']];
       }
     }
