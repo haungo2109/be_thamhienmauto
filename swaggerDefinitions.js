@@ -70,12 +70,15 @@
  *       properties:
  *         id: { type: integer }
  *         code: { type: string }
- *         discount_type: { type: string, enum: [fixed_cart, percent] }
+ *         discount_type: { type: string, enum: [fixed_cart, percent, free_ship] }
  *         amount: { type: number }
+ *         max_discount: { type: number }
  *         min_spend: { type: number }
  *         usage_limit: { type: integer }
  *         usage_count: { type: integer }
  *         expiry_date: { type: string, format: date-time }
+ *         isActive: { type: boolean }
+ *         is_show_banner: { type: boolean }
  *     Comment:
  *       type: object
  *       properties:

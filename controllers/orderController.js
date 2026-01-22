@@ -230,9 +230,9 @@ exports.createOrder = async (req, res) => {
     if (coupon_code) {
       validatedCoupon = await Coupon.findOne({ where: { code: coupon_code } });
       
-      if (!validatedCoupon) {
+      if (!validatedCoupon || validatedCoupon.isActive === false) {
         await t.rollback();
-        return res.status(400).json({ error: 'Mã giảm giá không hợp lệ' });
+        return res.status(400).json({ error: 'Mã giảm giá không hợp lệ hoặc đã bị vô hiệu hóa' });
       }
 
       // Kiểm tra hết hạn
@@ -258,10 +258,17 @@ exports.createOrder = async (req, res) => {
         discountAmount = parseFloat(validatedCoupon.amount);
       } else if (validatedCoupon.discount_type === 'percent') {
         discountAmount = (subtotal * parseFloat(validatedCoupon.amount)) / 100;
+        // Áp dụng mức giảm tối đa nếu có
+        const maxDiscount = parseFloat(validatedCoupon.max_discount);
+        if (maxDiscount > 0 && discountAmount > maxDiscount) {
+          discountAmount = maxDiscount;
+        }
+      } else if (validatedCoupon.discount_type === 'free_ship') {
+        discountAmount = parseFloat(shipping_fee);
       }
       
-      // Đảm bảo tiền giảm không vượt quá tổng tiền
-      if (discountAmount > subtotal) discountAmount = subtotal;
+      // Đảm bảo tiền giảm không vượt quá tổng tiền hàng + ship
+      if (discountAmount > (subtotal + parseFloat(shipping_fee))) discountAmount = subtotal + parseFloat(shipping_fee);
     }
 
     const totalAmount = subtotal - discountAmount + parseFloat(shipping_fee) + parseFloat(tax_amount);
