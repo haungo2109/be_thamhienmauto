@@ -266,6 +266,14 @@ exports.createOrder = async (req, res) => {
 
     const totalAmount = subtotal - discountAmount + parseFloat(shipping_fee) + parseFloat(tax_amount);
 
+    // Xác định trạng thái ban đầu dựa trên phương thức thanh toán
+    let initialStatus = 'pending';
+    if (payment_method_id === 'cod') {
+      initialStatus = 'processing';
+    } else if (payment_method_id === 'bank_transfer') {
+      initialStatus = 'pending';
+    }
+
     // 4. Tạo đơn hàng
     const orderNumber = 'ORD-' + Date.now() + Math.floor(Math.random() * 1000);
     const order = await Order.create({
@@ -284,7 +292,7 @@ exports.createOrder = async (req, res) => {
       note,
       payment_method_id,
       shipping_partner_id,
-      status: 'pending'
+      status: initialStatus
     }, { transaction: t });
 
     // 5. Tạo các chi tiết đơn hàng
