@@ -1,6 +1,9 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const ProductImage = require('../models/ProductImage');
+const ProductVariant = require('../models/ProductVariant');
+const VariantOption = require('../models/VariantOption');
+const { sequelize } = require('../config/database');
 const Joi = require('joi');
 const slugify = require('slugify');
 const { paginate } = require('../utils/pagination');
@@ -24,7 +27,7 @@ const productSchema = Joi.object({
 
 exports.getProducts = async (req, res) => {
   try {
-    const { category_id, q, stock_status, min_price, max_price, sort } = req.query;
+    const { category_id, q, stock_status, min_price, max_price, sort, brand, model } = req.query;
     let where = {};
 
     if (category_id) where.category_id = category_id;
@@ -38,6 +41,19 @@ exports.getProducts = async (req, res) => {
       where.price = {};
       if (min_price) where.price[Op.gte] = parseFloat(min_price);
       if (max_price) where.price[Op.lte] = parseFloat(max_price);
+    }
+
+    if (brand || model) {
+      const brandFilter = brand ? `AND EXISTS (SELECT 1 FROM "${VariantOption.getTableName()}" AS vo WHERE vo.variant_id = pv.id AND vo.attribute_name = 'Hãng xe' AND vo.attribute_value = ${sequelize.escape(brand)})` : '';
+      const modelFilter = model ? `AND EXISTS (SELECT 1 FROM "${VariantOption.getTableName()}" AS vo WHERE vo.variant_id = pv.id AND vo.attribute_name = 'Dòng xe' AND vo.attribute_value = ${sequelize.escape(model)})` : '';
+      
+      where[Op.and] = where[Op.and] || [];
+      where[Op.and].push(sequelize.literal(`EXISTS (
+        SELECT 1 FROM "${ProductVariant.getTableName()}" AS pv
+        WHERE pv.product_id = "Product".id
+        ${brandFilter}
+        ${modelFilter}
+      )`));
     }
 
     let order = [['created_at', 'DESC']];
@@ -67,7 +83,7 @@ exports.getProducts = async (req, res) => {
 exports.getProductsByCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { q, stock_status, min_price, max_price, sort } = req.query;
+    const { q, stock_status, min_price, max_price, sort, brand, model } = req.query;
     
     let categoryWhere = isNaN(id) ? { slug: id } : { id: id };
     const category = await Category.findOne({ where: categoryWhere });
@@ -81,6 +97,19 @@ exports.getProductsByCategory = async (req, res) => {
       where.price = {};
       if (min_price) where.price[Op.gte] = parseFloat(min_price);
       if (max_price) where.price[Op.lte] = parseFloat(max_price);
+    }
+
+    if (brand || model) {
+      const brandFilter = brand ? `AND EXISTS (SELECT 1 FROM "${VariantOption.getTableName()}" AS vo WHERE vo.variant_id = pv.id AND vo.attribute_name = 'Hãng xe' AND vo.attribute_value = ${sequelize.escape(brand)})` : '';
+      const modelFilter = model ? `AND EXISTS (SELECT 1 FROM "${VariantOption.getTableName()}" AS vo WHERE vo.variant_id = pv.id AND vo.attribute_name = 'Dòng xe' AND vo.attribute_value = ${sequelize.escape(model)})` : '';
+      
+      where[Op.and] = where[Op.and] || [];
+      where[Op.and].push(sequelize.literal(`EXISTS (
+        SELECT 1 FROM "${ProductVariant.getTableName()}" AS pv
+        WHERE pv.product_id = "Product".id
+        ${brandFilter}
+        ${modelFilter}
+      )`));
     }
 
     let order = [['created_at', 'DESC']];
