@@ -23,8 +23,7 @@ const updatePaymentMethodSchema = Joi.object({
 exports.getPaymentMethods = async (req, res) => {
   try {
     // Mặc định chỉ lấy các phương thức đang hoạt động
-    const methods = await PaymentMethod.findAll({ 
-      where: { isActive: true }, 
+    const methods = await PaymentMethod.findAll({
       order: [['id', 'ASC']] 
     });
     res.json(methods);

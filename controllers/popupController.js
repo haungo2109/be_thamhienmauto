@@ -1,6 +1,7 @@
 const Popup = require('../models/Popup');
 const Joi = require('joi');
 const { paginate } = require('../utils/pagination');
+const { uploadFile } = require('../utils/rustfs');
 
 const popupSchema = Joi.object({
   title: Joi.string().min(1).required(),
@@ -32,14 +33,35 @@ exports.getPopup = async (req, res) => {
   }
 };
 
+exports.getActivePopup = async (req, res) => {
+  try {
+    const popup = await Popup.findOne({
+      where: { is_active: true },
+      order: [['id', 'DESC']] // Get the most recently created active popup
+    });
+    if (!popup) return res.status(404).json({ error: 'No active popup found' });
+    res.json(popup);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 exports.createPopup = async (req, res) => {
   try {
     const { error } = popupSchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details[0].message });
 
-    const popup = await Popup.create(req.body);
+    let popupData = req.body;
+    if (req.file) {
+      const fileName = `popups/${Date.now()}-${req.file.originalname}`;
+      const imageUrl = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
+      popupData = { ...req.body, image_url: imageUrl };
+    }
+
+    const popup = await Popup.create(popupData);
     res.status(201).json(popup);
   } catch (error) {
+    console.error('Create popup error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -52,9 +74,17 @@ exports.updatePopup = async (req, res) => {
     const popup = await Popup.findByPk(req.params.id);
     if (!popup) return res.status(404).json({ error: 'Popup not found' });
 
-    await popup.update(req.body);
+    let updateData = req.body;
+    if (req.file) {
+      const fileName = `popups/${Date.now()}-${req.file.originalname}`;
+      const imageUrl = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
+      updateData = { ...req.body, image_url: imageUrl };
+    }
+
+    await popup.update(updateData);
     res.json(popup);
   } catch (error) {
+    console.error('Update popup error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

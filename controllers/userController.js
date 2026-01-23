@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const { sequelize } = require('../config/database');
+const { Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
@@ -31,12 +33,40 @@ const changePasswordSchema = Joi.object({
 
 exports.getUsers = async (req, res) => {
   try {
+    const { q } = req.query;
+    const where = {};
+    if (q) {
+      where.name = { [Op.iLike]: `%${q}%` };
+    }
+
     const result = await paginate(User, {
       req,
-      attributes: { exclude: ['password_hash'] }
+      where,
+      attributes: { 
+        exclude: ['password_hash'],
+        include: [
+          [
+            sequelize.literal(`(
+              SELECT COUNT(*)
+              FROM "Orders"
+              WHERE "Orders".user_id = "User".id
+            )`),
+            'total_orders'
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COALESCE(SUM(total_amount), 0)
+              FROM "Orders"
+              WHERE "Orders".user_id = "User".id
+            )`),
+            'total_spending'
+          ]
+        ]
+      }
     });
     res.json(result);
   } catch (error) {
+    console.error('Get users error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -44,11 +74,32 @@ exports.getUsers = async (req, res) => {
 exports.getUser = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id, {
-      attributes: { exclude: ['password_hash'] }
+      attributes: { 
+        exclude: ['password_hash'],
+        include: [
+          [
+            sequelize.literal(`(
+              SELECT COUNT(*)
+              FROM "Orders"
+              WHERE "Orders".user_id = "User".id
+            )`),
+            'total_orders'
+          ],
+          [
+            sequelize.literal(`(
+              SELECT COALESCE(SUM(total_amount), 0)
+              FROM "Orders"
+              WHERE "Orders".user_id = "User".id
+            )`),
+            'total_spending'
+          ]
+        ]
+      }
     });
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json(user);
   } catch (error) {
+    console.error('Get user error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

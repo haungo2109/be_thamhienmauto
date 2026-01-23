@@ -1,21 +1,68 @@
 const Coupon = require('../models/Coupon');
 const Joi = require('joi');
 const { paginate } = require('../utils/pagination');
+const { Op } = require('sequelize');
 
-const couponSchema = Joi.object({
+const createCouponSchema = Joi.object({
   code: Joi.string().min(1).max(50).required(),
   discount_type: Joi.string().valid('fixed_cart', 'percent', 'free_ship').required(),
   amount: Joi.number().positive().required(),
+  max_discount: Joi.number().min(0),
   min_spend: Joi.number().min(0),
   usage_limit: Joi.number().integer().min(0),
-  expiry_date: Joi.date()
+  expiry_date: Joi.date().allow(null),
+  isActive: Joi.boolean(),
+  is_show_banner: Joi.boolean()
+});
+
+const updateCouponSchema = Joi.object({
+  code: Joi.string().min(1).max(50),
+  discount_type: Joi.string().valid('fixed_cart', 'percent', 'free_ship'),
+  amount: Joi.number().positive(),
+  max_discount: Joi.number().min(0),
+  min_spend: Joi.number().min(0),
+  usage_limit: Joi.number().integer().min(0),
+  expiry_date: Joi.date().allow(null),
+  isActive: Joi.boolean(),
+  is_show_banner: Joi.boolean()
 });
 
 exports.getCoupons = async (req, res) => {
   try {
-    const result = await paginate(Coupon, { req });
+    const { status, type, q } = req.query;
+    let where = {};
+
+    if (q) {
+      where.code = { [Op.iLike]: `%${q}%` };
+    }
+
+    if (type) {
+      where.discount_type = type;
+    }
+
+    if (status) {
+      const now = new Date();
+      if (status === 'active') {
+        where.isActive = true;
+        where[Op.or] = [
+          { expiry_date: { [Op.is]: null } },
+          { expiry_date: { [Op.gte]: now } }
+        ];
+      } else if (status === 'inactive') {
+        where.isActive = false;
+      } else if (status === 'expired') {
+        where.expiry_date = { [Op.lt]: now };
+      }
+    }
+
+    const result = await paginate(Coupon, { 
+      req, 
+      where,
+      order: [['created_at', 'DESC']]
+    });
     res.json(result);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -32,7 +79,7 @@ exports.getCoupon = async (req, res) => {
 
 exports.createCoupon = async (req, res) => {
   try {
-    const { error } = couponSchema.validate(req.body);
+    const { error } = createCouponSchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details[0].message });
 
     const coupon = await Coupon.create(req.body);
@@ -44,7 +91,7 @@ exports.createCoupon = async (req, res) => {
 
 exports.updateCoupon = async (req, res) => {
   try {
-    const { error } = couponSchema.validate(req.body);
+    const { error } = updateCouponSchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details[0].message });
 
     const coupon = await Coupon.findByPk(req.params.id);

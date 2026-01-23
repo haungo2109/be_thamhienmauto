@@ -8,6 +8,12 @@ const shippingPartnerSchema = Joi.object({
   status: Joi.string().valid('active', 'inactive')
 });
 
+const updateShippingPartnerSchema = Joi.object({
+  name: Joi.string().min(1).max(100),
+  description: Joi.string(),
+  status: Joi.string().valid('active', 'inactive')
+});
+
 exports.getShippingPartners = async (req, res) => {
   try {
     const result = await paginate(ShippingPartner, { req });
@@ -41,7 +47,7 @@ exports.createShippingPartner = async (req, res) => {
 
 exports.updateShippingPartner = async (req, res) => {
   try {
-    const { error } = shippingPartnerSchema.validate(req.body);
+    const { error } = updateShippingPartnerSchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details[0].message });
 
     const shippingPartner = await ShippingPartner.findByPk(req.params.id);
