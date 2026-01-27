@@ -6,6 +6,7 @@ const ProductVariant = sequelize.define('ProductVariant', {
   product_id: { type: DataTypes.BIGINT, allowNull: false },
   sku: { type: DataTypes.STRING(100), unique: true },
   price: { type: DataTypes.DECIMAL(15, 2), allowNull: false },
+  sale_price: { type: DataTypes.DECIMAL(15, 2), allowNull: true },
   stock_quantity: { type: DataTypes.INTEGER, defaultValue: 0 },
   image_url: { type: DataTypes.STRING(255) },
   extra_data: { type: DataTypes.JSONB, allowNull: true },

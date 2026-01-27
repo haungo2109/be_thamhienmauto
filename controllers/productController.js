@@ -3,6 +3,7 @@ const Category = require('../models/Category');
 const ProductImage = require('../models/ProductImage');
 const ProductVariant = require('../models/ProductVariant');
 const VariantOption = require('../models/VariantOption');
+const Promotion = require('../models/Promotion');
 const { sequelize } = require('../config/database');
 const Joi = require('joi');
 const slugify = require('slugify');
@@ -13,6 +14,23 @@ const { Op } = require('sequelize');
 
 // Configure multer for memory storage
 const upload = multer({ storage: multer.memoryStorage() });
+
+// Helper function to sync product price with its variants
+const syncProductPriceWithVariants = async (productId) => {
+  const minVariant = await ProductVariant.findOne({
+    where: { product_id: productId },
+    order: [['price', 'ASC']]
+  });
+
+  if (minVariant) {
+    await Product.update({
+      price: minVariant.price,
+      sale_price: minVariant.sale_price
+    }, {
+      where: { id: productId }
+    });
+  }
+};
 
 const productSchema = Joi.object({
   name: Joi.string().min(1).max(255).required(),
@@ -139,29 +157,90 @@ exports.createProduct = async (req, res) => {
 };
 
 exports.updateProduct = async (req, res) => {
+  // Dùng transaction để đảm bảo an toàn
+  const t = await sequelize.transaction(); 
+
   try {
+    // 1. Validate Input
     const { error } = productSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
-
-    const product = await Product.findByPk(req.params.id);
-    if (!product) return res.status(404).json({ error: 'Product not found' });
-
-    let image_url = req.body.image_url || product.image_url;
-    if (req.file) {
-      // Delete old file if exists
-      if (product.image_url) {
-        await deleteFile(product.image_url);
-      }
-      // Upload new file
-      image_url = await uploadFile(req.file, 'products');
+    if (error) {
+      await t.rollback();
+      return res.status(400).json({ error: error.details[0].message });
     }
 
-    const { name, ...data } = req.body;
+    const product = await Product.findByPk(req.params.id);
+    if (!product) {
+      await t.rollback();
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const { name, price, ...data } = req.body;
+
+    // 2. Xử lý Ảnh (Upload trước - Xóa sau)
+    let newImageUrl = null;
+    if (req.file) {
+      // Upload ảnh mới trước
+      newImageUrl = await uploadFile(req.file, 'products'); 
+      data.image_url = newImageUrl;
+    }
+
+    // 3. Xử lý Slug
     if (name) data.slug = slugify(name, { lower: true });
-    data.image_url = image_url;
-    await product.update(data);
+
+    // 4. Xử lý Giá (Quan trọng)
+    if (price !== undefined) {
+      // 4.1. Kiểm tra xem có Variant không?
+      // Nếu có variant, KHÔNG cho phép sửa giá ở bảng Product (vì giá phải lấy từ min variant)
+      const variantCount = await ProductVariant.count({ where: { product_id: product.id } });
+      
+      if (variantCount > 0) {
+        // Option A: Báo lỗi
+        // await t.rollback();
+        // return res.status(400).json({ error: 'Cannot update price directly. Please update product variants.' });
+        
+        // Option B (Mềm mỏng): Bỏ qua field price, chỉ update thông tin khác
+        console.warn(`[UpdateProduct] Ignored price update for product ${product.id} because it has variants.`);
+      } else {
+        // 4.2. Logic cho Simple Product
+        data.price = price;
+        
+        // MẶC ĐỊNH: Reset sale_price về bằng price mới
+        data.sale_price = price; 
+
+        // Nếu có promotion, tính lại sale_price
+        if (product.promotion_id) {
+          const promotion = await Promotion.findByPk(product.promotion_id);
+          // Check thêm logic ngày hết hạn nếu cần
+          if (promotion && promotion.is_active) {
+            const discountValue = parseFloat(promotion.discount_value);
+            const originalPrice = parseFloat(price);
+
+            if (promotion.discount_type === 'percentage') {
+              data.sale_price = Math.max(0, originalPrice - (originalPrice * (discountValue / 100)));
+            } else {
+              data.sale_price = Math.max(0, originalPrice - discountValue);
+            }
+          }
+        }
+      }
+    }
+
+    // 5. Update Database
+    await product.update(data, { transaction: t });
+
+    await t.commit(); // Commit transaction
+
+    // 6. Dọn dẹp: Xóa ảnh cũ (Chỉ làm khi mọi thứ đã thành công)
+    if (newImageUrl && product.image_url) {
+      // Không cần await để tránh block response, hoặc catch error để không crash
+      deleteFile(product.image_url).catch(err => console.error("Failed to delete old image:", err));
+    }
+
     res.json(product);
+
   } catch (error) {
+    await t.rollback();
+    console.error("Update product error:", error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -182,3 +261,5 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+exports.syncProductPriceWithVariants = syncProductPriceWithVariants;

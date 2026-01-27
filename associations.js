@@ -18,6 +18,7 @@ const ShippingPartner = require("./models/ShippingPartner");
 const CartItem = require("./models/CartItem");
 const UserAddress = require("./models/UserAddress");
 const PaymentMethod = require("./models/PaymentMethod");
+const Promotion = require("./models/Promotion");
 
 // User associations
 User.hasMany(Post, { foreignKey: "author_id" });
@@ -102,3 +103,7 @@ ShippingPartner.hasMany(Order, { foreignKey: 'shipping_partner_id' }); // New as
 
 // PaymentMethod associations
 PaymentMethod.hasMany(Order, { foreignKey: 'payment_method_id' });
+
+// Promotion associations
+Promotion.hasMany(Product, { foreignKey: 'promotion_id', as: 'Products' });
+Product.belongsTo(Promotion, { foreignKey: 'promotion_id', as: 'Promotion' });

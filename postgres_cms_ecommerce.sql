@@ -17,6 +17,8 @@ CREATE TYPE post_status_type AS ENUM ('published', 'draft', 'archived');
 CREATE TYPE stock_status_type AS ENUM ('in_stock', 'out_of_stock', 'backorder');
 CREATE TYPE order_status_type AS ENUM ('pending', 'processing', 'shipped', 'completed', 'cancelled', 'returned');
 CREATE TYPE discount_type_enum AS ENUM ('fixed_cart', 'percent');
+CREATE TYPE promotion_type_enum AS ENUM ('flash_sale', 'discount_program');
+CREATE TYPE discount_calc_type_enum AS ENUM ('percentage', 'fixed');
 
 -- =================================================================
 -- PHẦN 2: NGƯỜI DÙNG & NỘI DUNG (CORE CMS)
@@ -105,6 +107,7 @@ CREATE TABLE products (
     stock_status stock_status_type DEFAULT 'in_stock',
     image_url VARCHAR(255), -- Ảnh đại diện chính (Thumbnail)
     category_id BIGINT REFERENCES categories(id) ON DELETE SET NULL,
+    promotion_id BIGINT REFERENCES promotions(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -131,6 +134,7 @@ CREATE TABLE product_variants (
     product_id BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     sku VARCHAR(100) UNIQUE,
     price DECIMAL(15, 2) NOT NULL,
+    sale_price DECIMAL(15, 2) DEFAULT NULL,
     stock_quantity INT DEFAULT 0,
     image_url VARCHAR(255) DEFAULT NULL -- Ảnh riêng cho biến thể này
 );
@@ -259,3 +263,20 @@ CREATE INDEX idx_coupons_code ON coupons(code);
 -- Seed mặc định COD
 INSERT INTO payment_methods (id, name, type, "isActive", status, description, config)
 VALUES ('cod', 'Thanh toán khi nhận hàng (COD)', 'manual', TRUE, 'active', 'Khách hàng thanh toán tiền mặt trực tiếp cho shipper khi nhận hàng.', '{}');
+
+-- 19. Bảng Khuyến mãi (Promotions)
+CREATE TABLE promotions (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type promotion_type_enum NOT NULL,
+    discount_type discount_calc_type_enum NOT NULL DEFAULT 'percentage',
+    discount_value DECIMAL(15, 2) NOT NULL DEFAULT 0,
+    start_date TIMESTAMPTZ NOT NULL,
+    end_date TIMESTAMPTZ NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TRIGGER update_promotions_modtime BEFORE UPDATE ON promotions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

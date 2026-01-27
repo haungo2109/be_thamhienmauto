@@ -36,6 +36,7 @@ const shippingPartnersRoutes = require('./routes/shipping-partners');
 const cartRoutes = require('./routes/cart');
 const addressRoutes = require('./routes/users-addresses');
 const paymentMethodRoutes = require('./routes/payment-methods');
+const promotionRoutes = require('./routes/promotions');
 
 // Require associations after models
 require("./associations");
@@ -96,6 +97,7 @@ app.use('/api/shipping-partners', shippingPartnersRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/user-addresses', addressRoutes);
 app.use('/api/payment-methods', paymentMethodRoutes);
+app.use('/api/promotions', promotionRoutes);
 
 // Swagger docs route
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
@@ -120,7 +122,7 @@ sequelize
   .then(() => {
     console.log("Database connected...");
     // Chỉ chạy sync khi cần thiết (ví dụ dev mode mới)
-    sequelize.sync({ alter: true });
+    // sequelize.sync({ alter: true });
     app.listen(3001, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
