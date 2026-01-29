@@ -37,6 +37,7 @@ const cartRoutes = require('./routes/cart');
 const addressRoutes = require('./routes/users-addresses');
 const paymentMethodRoutes = require('./routes/payment-methods');
 const promotionRoutes = require('./routes/promotions');
+const dashboardRoutes = require('./routes/dashboard');
 
 // Require associations after models
 require("./associations");
@@ -98,6 +99,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/user-addresses', addressRoutes);
 app.use('/api/payment-methods', paymentMethodRoutes);
 app.use('/api/promotions', promotionRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Swagger docs route
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));

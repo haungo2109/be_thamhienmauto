@@ -139,6 +139,77 @@
 
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     DashboardStat:
+ *       type: object
+ *       properties:
+ *         name: { type: string, example: "T1" }
+ *         revenue: { type: number, example: 12345.67 }
+ *         orders: { type: integer, example: 100 }
+ *         customers: { type: integer, example: 50 }
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     PaymentMethodStat:
+ *       type: object
+ *       properties:
+ *         name: { type: string, example: "Credit Card" }
+ *         value: { type: number, example: 45.75 } # Percentage
+ *         amount: { type: number, example: 12345.67 } # Total currency amount
+ */
+
+/**
+ * @swagger
+ * /api/dashboard/stats:
+ *   get:
+ *     summary: Get dashboard statistics (revenue, orders, customers) over a period
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *           enum: [week, month, year]
+ *         required: true
+ *         description: The period for which to retrieve statistics (week, month, or year).
+ *     responses:
+ *       200:
+ *         description: Dashboard statistics retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/DashboardStat'
+ *       400:
+ *         description: Invalid period provided.
+ *       500:
+ *         description: Server error.
+ */
+
+/**
+ * @swagger
+ * /api/dashboard/payment-methods:
+ *   get:
+ *     summary: Get payment method statistics (percentage and total amount)
+ *     responses:
+ *       200:
+ *         description: Payment method statistics retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/PaymentMethodStat'
+ *       500:
+ *         description: Server error.
+ */
+
+/**
+ * @swagger
  * /api/users:
  *   get:
  *     summary: Get all users
