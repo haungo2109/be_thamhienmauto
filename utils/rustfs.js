@@ -1,6 +1,6 @@
 const { Client } = require('minio');
 
-const minioClient = new Client({
+const rustfsClient = new Client({
   endPoint: process.env.RUSTFS_ENDPOINT,
   useSSL: process.env.RUSTFS_USE_SSL === 'true',
   accessKey: process.env.RUSTFS_ACCESS_KEY,
@@ -14,28 +14,26 @@ const BASE_URL = `${process.env.RUSTFS_USE_SSL === 'true' ? 'https' : 'http'}://
 // Function to upload file
 const uploadFile = async (fileName, fileBuffer, mimeType) => {
   try {
-    await minioClient.putObject(bucketName, fileName, fileBuffer, {
+    await rustfsClient.putObject(bucketName, fileName, fileBuffer, {
       'Content-Type': mimeType
     });
     const url = `${BASE_URL}/${fileName}`;
     return url;
   } catch (error) {
-    throw new Error(`MinIO upload failed: ${error.message}`);
+    console.error("Chi tiết lỗi uploadFile:", JSON.stringify(error, null, 2));
+    throw new Error(`RustFS upload failed: ${JSON.stringify(error, null, 2)}`);
   }
 };
 
 // Function to delete file
 const deleteFile = async (fileName) => {
   try {
-    await minioClient.removeObject(bucketName, fileName);
+    const name = fileName.replace(`${BASE_URL}/`, '');
+    await rustfsClient.removeObject(bucketName, name);
   } catch (error) {
-    throw new Error(`MinIO delete failed: ${error.message}`);
+    console.error("Chi tiết lỗi deleteFile:", JSON.stringify(error, null, 2));
+    throw new Error(`RustFS delete failed: ${JSON.stringify(error, null, 2)}`);
   }
 };
 
-// Function to get file URL
-const getFileUrl = (fileName) => {
-  return `${BASE_URL}/${fileName}`;
-};
-
-module.exports = { minioClient, uploadFile, deleteFile, getFileUrl };
+module.exports = { minioClient: rustfsClient, uploadFile, deleteFile };

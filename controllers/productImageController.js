@@ -45,7 +45,7 @@ exports.createProductImage = async (req, res) => {
 
     if (!req.file) return res.status(400).json({ error: 'Image file is required' });
 
-    const fileName = `product-images/${Date.now()}-${req.file.originalname}`;
+    const fileName = `products/${Date.now()}-${req.file.originalname}`;
     const imageUrl = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
 
     const productImage = await ProductImage.create({

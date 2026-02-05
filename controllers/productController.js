@@ -16,7 +16,7 @@ const { Op } = require('sequelize');
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Helper function to sync product price with its variants
-const syncProductPriceWithVariants = async (productId) => {
+exports.syncProductPriceWithVariants = async (productId) => {
   const minVariant = await ProductVariant.findOne({
     where: { product_id: productId },
     order: [['price', 'ASC']]
@@ -45,8 +45,9 @@ const productSchema = Joi.object({
 
 exports.getProducts = async (req, res) => {
   try {
-    const { categoryIdOrSlug, q, stock_status, min_price, max_price, sort, brand, model } = req.query;
+    const { categoryIdOrSlug, q, stock_status, min_price, max_price, sort, brand, model, promotion_type } = req.query;
     let where = {};
+    let include = [{ model: Category, as: 'Category' }];
 
     if (categoryIdOrSlug) {
       let categoryWhere = isNaN(categoryIdOrSlug) ? { slug: categoryIdOrSlug } : { id: categoryIdOrSlug };
@@ -62,9 +63,21 @@ exports.getProducts = async (req, res) => {
     }
 
     if (min_price || max_price) {
-      where.price = {};
-      if (min_price) where.price[Op.gte] = parseFloat(min_price);
-      if (max_price) where.price[Op.lte] = parseFloat(max_price);
+      where.sale_price = {};
+      if (min_price) where.sale_price[Op.gte] = parseFloat(min_price);
+      if (max_price) where.sale_price[Op.lte] = parseFloat(max_price);
+    }
+
+    if (promotion_type) {
+      include.push({
+        model: Promotion, as: 'Promotion',
+        where: {
+          type: promotion_type,
+          is_active: true,
+          end_date: { [Op.gte]: new Date() }
+        },
+        required: true // INNER JOIN to filter products that have this promotion
+      });
     }
 
     if (brand || model) {
@@ -83,8 +96,8 @@ exports.getProducts = async (req, res) => {
     let order = [['created_at', 'DESC']];
     if (sort) {
       switch (sort) {
-        case 'price_asc': order = [['price', 'ASC']]; break;
-        case 'price_desc': order = [['price', 'DESC']]; break;
+        case 'price_asc': order = [['sale_price', 'ASC']]; break;
+        case 'price_desc': order = [['sale_price', 'DESC']]; break;
         case 'oldest': order = [['created_at', 'ASC']]; break;
         case 'best_selling': order = [['created_at', 'DESC']]; break; // Cần thêm field sales_count để thực tế hơn
         default: order = [['created_at', 'DESC']];
@@ -94,7 +107,7 @@ exports.getProducts = async (req, res) => {
     const result = await paginate(Product, {
       req,
       where,
-      include: [{ model: Category, as: 'Category' }],
+      include,
       order
     });
     res.json(result);
@@ -144,7 +157,8 @@ exports.createProduct = async (req, res) => {
 
     let image_url = req.body.image_url;
     if (req.file) {
-      image_url = await uploadFile(req.file, 'products');
+      const fileName = `products/${Date.now()}-${req.file.originalname}`;
+      image_url = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
     }
 
     const { name, ...data } = req.body;
@@ -180,7 +194,9 @@ exports.updateProduct = async (req, res) => {
     let newImageUrl = null;
     if (req.file) {
       // Upload ảnh mới trước
-      newImageUrl = await uploadFile(req.file, 'products'); 
+      const fileName = `products/${Date.now()}-${req.file.originalname}`;
+      newImageUrl = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
+
       data.image_url = newImageUrl;
     }
 
@@ -258,8 +274,32 @@ exports.deleteProduct = async (req, res) => {
     await product.destroy();
     res.json({ message: 'Product deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Delete product error:", error);
+    res.status(500).json({ error: 'Internal server error when delete product' });
   }
 };
 
-exports.syncProductPriceWithVariants = syncProductPriceWithVariants;
+exports.uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Validate file type
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedMimeTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({ error: 'Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.' });
+    }
+
+    const fileName = `products/${Date.now()}-${req.file.originalname.replace(/\s+/g, '-')}`;
+    const imageUrl = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
+
+    res.status(200).json({
+      message: 'Upload successful',
+      url: imageUrl
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

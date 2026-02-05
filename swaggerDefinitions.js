@@ -310,9 +310,49 @@
 
 /**
  * @swagger
+ * /api/upload:
+ *   post:
+ *     summary: Upload an image
+ *     tags: [Upload]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Upload successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *                 url: { type: string }
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
  * /api/products:
  *   get:
  *     summary: Get all products
+ *     parameters:
+ *       - in: query
+ *         name: promotion_type
+ *         schema:
+ *           type: string
+ *           enum: [flash_sale, discount_program]
+ *         description: Filter products by promotion type.
  *     responses:
  *       200:
  *         description: List of products

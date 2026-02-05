@@ -120,14 +120,6 @@ CREATE TABLE product_images (
     display_order INT DEFAULT 0
 );
 
--- 9. Bảng Biến thể sản phẩm (SKUs - Variants)
--- 9. Bảng Thuộc tính (Attributes)
--- Định nghĩa các thuộc tính như Color, Size, etc.
-CREATE TABLE attribute (
-    attribute_name VARCHAR(50) PRIMARY KEY,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 -- 10. Bảng Biến thể sản phẩm
 CREATE TABLE product_variants (
     id BIGSERIAL PRIMARY KEY,
@@ -144,7 +136,7 @@ CREATE TABLE product_variants (
 CREATE TABLE variant_options (
     id BIGSERIAL PRIMARY KEY,
     variant_id BIGINT NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,
-    attribute_name VARCHAR(50) NOT NULL REFERENCES attribute(attribute_name) ON DELETE CASCADE,
+    attribute_name VARCHAR(50) NOT NULL,
     attribute_value VARCHAR(50) NOT NULL,    affects_price BOOLEAN DEFAULT TRUE,    UNIQUE (variant_id, attribute_name)
 );
 

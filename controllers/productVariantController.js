@@ -6,27 +6,199 @@ const Joi = require('joi');
 const { uploadFile, deleteFile } = require('../utils/rustfs');
 const { syncProductPriceWithVariants } = require('./productController');
 const { sequelize } = require('../config/database');
+const { parseOptions, calculateSalePrice } = require('../utils/helper');
 
+// Schema validation mở rộng thêm mảng options
 const productVariantSchema = Joi.object({
   product_id: Joi.number().integer().required(),
   sku: Joi.string().max(100),
   price: Joi.number().positive().required(),
   stock_quantity: Joi.number().integer().min(0),
-  image_url: Joi.string().uri()
+  image_url: Joi.string().uri().allow('', null),
+  // Frontend gửi dạng: [{"attribute_name": "Color", "attribute_value": "Red"}, ...]
+  options: Joi.alternatives().try(
+    Joi.string(), // Trường hợp gửi form-data stringified
+    Joi.array().items(
+      Joi.object({
+        attribute_name: Joi.string().required(),
+        attribute_value: Joi.string().required()
+      })
+    )
+  ).optional()
 });
+
+// Schema validation cho Sync
+const syncVariantsSchema = Joi.object({
+  product_id: Joi.number().integer().required(),
+  // Mảng các item thêm mới (giống schema createBulk)
+  created: Joi.array().items(
+    Joi.object({
+      sku: Joi.string().max(100),
+      price: Joi.number().positive().required(),
+      stock_quantity: Joi.number().integer().min(0),
+      image_url: Joi.string().uri().allow('', null),
+      options: Joi.array().items(
+        Joi.object({
+          attribute_name: Joi.string().required(),
+          attribute_value: Joi.string().required()
+        })
+      ).min(1).required()
+    })
+  ).default([]),
+
+  // Mảng các item cần update (giống schema updateBulk)
+  updated: Joi.array().items(
+    Joi.object({
+      id: Joi.number().integer().required(), // Phải có ID
+      sku: Joi.string().max(100),
+      price: Joi.number().positive(),
+      stock_quantity: Joi.number().integer().min(0),
+      image_url: Joi.string().uri().allow('', null),
+      options: Joi.array().items(
+        Joi.object({
+          attribute_name: Joi.string().required(),
+          attribute_value: Joi.string().required()
+        })
+      ).optional()
+    })
+  ).default([]),
+
+  // Mảng ID cần xóa
+  deleted_ids: Joi.array().items(Joi.number().integer()).default([])
+});
+
+exports.syncBulkVariants = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    // 1. Validate
+    const { error } = syncVariantsSchema.validate(req.body);
+    if (error) {
+      await t.rollback();
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const { product_id, created, updated, deleted_ids } = req.body;
+
+    // Lấy thông tin Promotion/Product cha để tính giá chung cho Create/Update
+    const product = await Product.findByPk(product_id, {
+      include: [{ model: Promotion, as: 'promotion' }],
+      transaction: t
+    });
+    if (!product) {
+      await t.rollback();
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // --- PHASE 1: DELETE (Xóa trước cho nhẹ DB) ---
+    if (deleted_ids.length > 0) {
+      // Lấy danh sách ảnh để xóa file sau khi commit (nếu cần kỹ)
+      // const variantsToDelete = await ProductVariant.findAll({ where: { id: deleted_ids } });
+
+      // Xóa Options trước
+      await VariantOption.destroy({
+        where: { variant_id: deleted_ids },
+        transaction: t
+      });
+      // Xóa Variants
+      await ProductVariant.destroy({
+        where: { id: deleted_ids },
+        transaction: t
+      });
+    }
+
+    // --- PHASE 2: UPDATE ---
+    if (updated.length > 0) {
+      for (const item of updated) {
+        const variant = await ProductVariant.findByPk(item.id, { transaction: t });
+        if (!variant) continue;
+
+        const updateData = { ...item };
+        if (item.price !== undefined) {
+          updateData.sale_price = calculateSalePrice(parseFloat(item.price));
+        }
+
+        await variant.update(updateData, { transaction: t });
+
+        // Update Options: Xóa cũ tạo mới
+        if (item.options && item.options.length > 0) {
+          await VariantOption.destroy({ where: { variant_id: variant.id }, transaction: t });
+          const opts = item.options.map(o => ({
+            variant_id: variant.id,
+            attribute_name: o.attribute_name,
+            attribute_value: o.attribute_value
+          }));
+          await VariantOption.bulkCreate(opts, { transaction: t });
+        }
+      }
+    }
+
+    // --- PHASE 3: CREATE ---
+    if (created.length > 0) {
+      const newVariantsData = created.map(item => ({
+        product_id,
+        sku: item.sku,
+        price: item.price,
+        sale_price: calculateSalePrice(parseFloat(item.price)),
+        stock_quantity: item.stock_quantity || 0,
+        image_url: item.image_url,
+        _options: item.options // Lưu tạm
+      }));
+
+      const createdRecords = await ProductVariant.bulkCreate(newVariantsData, {
+        transaction: t,
+        returning: true
+      });
+
+      // Map options với ID vừa tạo
+      let newOptionsData = [];
+      createdRecords.forEach((rec, idx) => {
+        const opts = newVariantsData[idx]._options;
+        if (opts) {
+          opts.forEach(o => {
+            newOptionsData.push({
+              variant_id: rec.id,
+              attribute_name: o.attribute_name,
+              attribute_value: o.attribute_value
+            });
+          });
+        }
+      });
+
+      if (newOptionsData.length > 0) {
+        await VariantOption.bulkCreate(newOptionsData, { transaction: t });
+      }
+    }
+
+    // --- COMMIT ---
+    await t.commit();
+
+    // Side effect: Sync price range for product
+    try {
+      await syncProductPriceWithVariants(product_id);
+    } catch (e) { console.error("Sync price warning:", e); }
+
+    res.json({ message: 'Sync variants successfully' });
+
+  } catch (error) {
+    if (t) await t.rollback();
+    console.error('Sync variants error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 exports.getProductVariants = async (req, res) => {
   try {
     const product_id = req.params.id;
-    
     const variants = await ProductVariant.findAll({
       where: { product_id },
       include: [
-        { model: VariantOption, as: 'VariantOptions' }
-      ]
+        { model: VariantOption, as: 'VariantOptions' } // Lấy kèm options để hiển thị
+      ],
+      order: [['id', 'ASC']]
     });
     res.json(variants);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -49,84 +221,106 @@ exports.getProductVariant = async (req, res) => {
 exports.createProductVariant = async (req, res) => {
   const t = await sequelize.transaction();
   try {
+    // 1. Validate
     const { error } = productVariantSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
+    if (error) {
+      await t.rollback();
+      return res.status(400).json({ error: error.details[0].message });
+    }
 
-    // 1. Xử lý ảnh
-    let imageUrl = req.body.image_url;
+    // 2. Xử lý ảnh
+    let imageUrl = req.body.image_url || null;
     if (req.file) {
-      const fileName = `product-variants/${Date.now()}-${req.file.originalname}`;
+      const fileName = `products/${Date.now()}-${req.file.originalname}`;
       imageUrl = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
     }
 
-    // 2. Logic tính giá (BẮT BUỘC PHẢI CÓ KHI CREATE)
-    let salePrice = req.body.price; // Mặc định sale bằng price
+    // 3. Logic tính giá
+    let salePrice = req.body.price;
     const originalPrice = parseFloat(req.body.price);
 
-    // Lấy thông tin Product cha và Promotion để tính giá ngay lập tức
     const product = await Product.findByPk(req.body.product_id, {
       include: [{ model: Promotion, as: 'promotion' }],
       transaction: t
     });
 
     if (!product) {
-        await t.rollback();
-        return res.status(404).json({ error: 'Product not found' });
+      await t.rollback();
+      return res.status(404).json({ error: 'Product not found' });
     }
 
     if (product.promotion && product.promotion.is_active) {
-       const { discount_type, discount_value } = product.promotion;
-       const val = parseFloat(discount_value);
-       
-       if (discount_type === 'percentage') {
-         salePrice = originalPrice - (originalPrice * (val / 100));
-       } else {
-         salePrice = originalPrice - val;
-       }
-       salePrice = Math.max(0, salePrice);
+      const { discount_type, discount_value } = product.promotion;
+      const val = parseFloat(discount_value);
+      if (discount_type === 'percentage') {
+        salePrice = originalPrice - (originalPrice * (val / 100));
+      } else {
+        salePrice = originalPrice - val;
+      }
+      salePrice = Math.max(0, salePrice);
     }
 
-    // 3. Tạo record
+    // 4. Tạo Variant
     const productVariant = await ProductVariant.create({
       ...req.body,
       image_url: imageUrl,
-      sale_price: salePrice // Lưu giá đã tính
+      sale_price: salePrice
     }, { transaction: t });
-    
+
+    // 5. Tạo Variant Options (QUAN TRỌNG)
+    // Tự động thêm options ngay trong lúc tạo variant
+    const optionsRaw = parseOptions(req.body.options);
+    if (optionsRaw && optionsRaw.length > 0) {
+      const optionsData = optionsRaw.map(opt => ({
+        variant_id: productVariant.id,
+        attribute_name: opt.attribute_name,
+        attribute_value: opt.attribute_value
+      }));
+
+      await VariantOption.bulkCreate(optionsData, { transaction: t });
+    }
+
     await t.commit();
 
-    // 4. Sync ra ngoài (Side effect)
+    // 6. Sync side effect
     try {
-        await syncProductPriceWithVariants(productVariant.product_id);
-    } catch (e) { console.error(e); }
-    
-    res.status(201).json(productVariant);
+      await syncProductPriceWithVariants(productVariant.product_id);
+    } catch (e) { console.error("Sync price error:", e); }
+
+    // Trả về data đầy đủ bao gồm cả options vừa tạo
+    const result = await ProductVariant.findByPk(productVariant.id, {
+      include: [{ model: VariantOption, as: 'VariantOptions' }]
+    });
+
+    res.status(201).json(result);
 
   } catch (error) {
     if (t) await t.rollback();
     console.error(error);
+    // Xử lý lỗi unique constraint (ví dụ trùng SKU hoặc trùng Option)
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({ error: 'SKU or Option combination already exists.' });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 exports.updateProductVariant = async (req, res) => {
-  const t = await sequelize.transaction(); // Dùng transaction để an toàn
-
+  const t = await sequelize.transaction();
   try {
     const { error } = productVariantSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
+    if (error) {
+      await t.rollback();
+      return res.status(400).json({ error: error.details[0].message });
+    }
 
-    // 1. Tối ưu Query: Lấy Variant kèm luôn Product và Promotion
     const productVariant = await ProductVariant.findByPk(req.params.id, {
       include: [{
         model: Product,
-        as: 'product', // Nhớ check alias trong model definition
-        include: [{
-          model: Promotion,
-          as: 'promotion' // Nhớ check alias
-        }]
+        as: 'Product', // Sửa lại alias cho khớp với model definition (thường là PascalCase nếu không define khác)
+        include: [{ model: Promotion, as: 'Promotion' }]
       }],
-      transaction: t // Đọc trong transaction
+      transaction: t
     });
 
     if (!productVariant) {
@@ -135,27 +329,25 @@ exports.updateProductVariant = async (req, res) => {
     }
 
     const updateData = { ...req.body };
-    
-    // 1. Xử lý ảnh mới (Nếu có upload ảnh mới)
+
+    // 1. Xử lý ảnh
     if (req.file) {
-      const fileName = `product-variants/${Date.now()}-${req.file.originalname}`;
+      const fileName = `products/${Date.now()}-${req.file.originalname}`;
       const newImageUrl = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
       updateData.image_url = newImageUrl;
-
-      // (Optional) TODO: Xóa ảnh cũ trên S3/Cloudinary để tiết kiệm dung lượng
-      if (productVariant.image_url) deleteFile(productVariant.image_url);
+      if (productVariant.image_url) {
+        // Fire and forget delete old file
+        deleteFile(productVariant.image_url).catch(e => console.error(e));
+      }
     }
 
-    // 2. Logic tính giá chuẩn
+    // 2. Tính giá lại nếu price thay đổi
     if (req.body.price !== undefined) {
       const originalPrice = parseFloat(req.body.price);
-      const product = productVariant.product;
-      const promotion = product ? product.promotion : null;
-
-      // Mặc định: Nếu không có khuyến mãi, giá bán = giá gốc
+      const product = productVariant.Product;
+      const promotion = product ? product.Promotion : null;
       let newSalePrice = originalPrice;
 
-      // Nếu có khuyến mãi Active, tính toán lại
       if (promotion && promotion.is_active) {
         const discountValue = parseFloat(promotion.discount_value);
         if (promotion.discount_type === 'percentage') {
@@ -163,31 +355,46 @@ exports.updateProductVariant = async (req, res) => {
         } else {
           newSalePrice = originalPrice - discountValue;
         }
-        // Đảm bảo không âm
         newSalePrice = Math.max(0, newSalePrice);
       }
-
       updateData.sale_price = newSalePrice;
     }
 
-    // 3. Update Variant
+    // 3. Update Variant Info
     await productVariant.update(updateData, { transaction: t });
 
-    // 4. Commit transaction trước khi làm việc phụ (sync)
-    // Hoặc nếu syncProductPriceWithVariants có support transaction thì truyền t vào
-    await t.commit(); 
+    // 4. Update Options (QUAN TRỌNG: Replace strategy)
+    // Nếu client gửi options lên, ta xóa cũ đi tạo mới (đơn giản và an toàn nhất cho biến thể)
+    const optionsRaw = parseOptions(req.body.options);
+    if (req.body.options !== undefined) { // Chỉ update nếu trường options có tồn tại trong request
+      // Xóa hết options cũ của variant này
+      await VariantOption.destroy({
+        where: { variant_id: productVariant.id },
+        transaction: t
+      });
 
-    // 5. Sync giá ra bảng cha (Nên bọc try catch riêng hoặc để chạy background)
-    // Lưu ý: Nếu hàm này lỗi thì transaction trên đã commit rồi, data variants vẫn đúng.
-    try {
-        await syncProductPriceWithVariants(productVariant.product_id);
-    } catch (syncError) {
-        console.error("Sync price warning:", syncError);
-        // Không throw lỗi ở đây để tránh client nhận 500 khi đã update variant thành công
+      if (optionsRaw.length > 0) {
+        const optionsData = optionsRaw.map(opt => ({
+          variant_id: productVariant.id,
+          attribute_name: opt.attribute_name,
+          attribute_value: opt.attribute_value
+        }));
+        await VariantOption.bulkCreate(optionsData, { transaction: t });
+      }
     }
-    
-    // Trả về data mới nhất
-    res.json(productVariant);
+
+    await t.commit();
+
+    try {
+      await syncProductPriceWithVariants(productVariant.product_id);
+    } catch (syncError) { console.error("Sync price warning:", syncError); }
+
+    // Trả về data mới nhất kèm options
+    const updatedVariant = await ProductVariant.findByPk(req.params.id, {
+      include: [{ model: VariantOption, as: 'VariantOptions' }]
+    });
+
+    res.json(updatedVariant);
 
   } catch (error) {
     if (t) await t.rollback();
@@ -197,19 +404,42 @@ exports.updateProductVariant = async (req, res) => {
 };
 
 exports.deleteProductVariant = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
-    const productVariant = await ProductVariant.findByPk(req.params.id);
-    if (!productVariant) return res.status(404).json({ error: 'ProductVariant not found' });
-
-    // Delete image from MinIO if exists
-    if (productVariant.image_url) {
-      const fileName = productVariant.image_url.split('/').pop();
-      await deleteFile(`product-variants/${fileName}`);
+    const productVariant = await ProductVariant.findByPk(req.params.id, { transaction: t });
+    if (!productVariant) {
+      await t.rollback();
+      return res.status(404).json({ error: 'ProductVariant not found' });
     }
 
-    await productVariant.destroy();
+    // 1. Xóa ảnh
+    if (productVariant.image_url) {
+      const fileName = productVariant.image_url.split('/').pop();
+      // Không cần await delete file để tránh block main thread lâu, lỗi file rác xử lý sau
+      deleteFile(`product-variants/${fileName}`).catch(console.error);
+    }
+
+    // 2. Xóa Options trước (Dù database có thể có cascade, xóa code cho chắc chắn logic)
+    await VariantOption.destroy({
+      where: { variant_id: req.params.id },
+      transaction: t
+    });
+
+    // 3. Xóa Variant
+    const productId = productVariant.product_id; // Lưu lại để sync
+    await productVariant.destroy({ transaction: t });
+
+    await t.commit();
+
+    // 4. Sync lại giá min/max của Product cha
+    try {
+      await syncProductPriceWithVariants(productId);
+    } catch (e) { console.error(e); }
+
     res.json({ message: 'ProductVariant deleted' });
   } catch (error) {
+    if (t) await t.rollback();
+    console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

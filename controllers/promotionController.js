@@ -114,7 +114,7 @@ exports.getPromotion = async (req, res) => {
       include: [{
         model: Product,
         as: 'Products',
-        attributes: ['id', 'name', 'price', 'image_url']
+        attributes: ['id', 'name', 'price', 'image_url', 'sale_price'],
       }]
     });
     if (!promotion) return res.status(404).json({ error: 'Promotion not found' });

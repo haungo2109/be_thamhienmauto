@@ -5,7 +5,7 @@ const auth = require('../middleware/auth');
 const router = express.Router();
 
 router.post('/apply', auth, applyCoupon);
-router.get('/', adminAuth, getCoupons);
+router.get('/', getCoupons);
 router.get('/:id', adminAuth, getCoupon);
 router.post('/', adminAuth, createCoupon);
 router.put('/:id', adminAuth, updateCoupon);

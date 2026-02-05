@@ -23,7 +23,6 @@ const productImageRoutes = require("./routes/product-images");
 const productVariantRoutes = require("./routes/product-variants");
 const variantOptionRoutes = require("./routes/variant-options");
 const orderItemRoutes = require("./routes/order-items");
-const attributeRoutes = require("./routes/attributes");
 const authMiddleware = require("./middleware/auth");
 const errorHandler = require("./middleware/errorHandler");
 const swaggerUi = require("swagger-ui-express");
@@ -61,12 +60,23 @@ if (process.env.NODE_ENV !== "development") {
 }
 
 // Rate Limiting (Giới hạn request để chống spam)
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 phút
-  max: 100, // Tối đa 100 request mỗi IP trong 15 phút
-  message: "Too many requests from this IP, please try again later",
+// Limiter chung cho toàn bộ app (nới lỏng hơn)
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500, // Tăng lên 500 cho thoải mái
+  message: "Hệ thống đang bận, vui lòng thử lại sau.",
+  standardHeaders: true, // Trả về thông tin RateLimit trong headers
+  legacyHeaders: false,
 });
-app.use("/api", limiter); // Áp dụng cho tất cả route bắt đầu bằng /api
+
+// Limiter riêng cho Login/Register (siết chặt)
+const authLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 1 giờ
+  max: 10, // Chỉ cho phép 10 lần thử/giờ
+  message: "Bạn đã thử quá nhiều lần, vui lòng quay lại sau 1 giờ.",
+});
+
+app.use("/api", generalLimiter); // Áp dụng cho tất cả route bắt đầu bằng /api
 
 // Body Parser
 app.use(express.json());
@@ -76,7 +86,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Routes
-app.use("/api/users", userRoutes);
+app.use("/api/users", authLimiter, userRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/post-categories", postCategoryRoutes);
@@ -89,7 +99,6 @@ app.use("/api/product-images", productImageRoutes);
 app.use("/api/product-variants", productVariantRoutes);
 app.use("/api/variant-options", variantOptionRoutes);
 app.use("/api/order-items", orderItemRoutes);
-app.use("/api/attributes", attributeRoutes);
 app.use('/api/popups', popupRoutes);
 app.use('/api/contact-info', contactInfoRoutes);
 app.use('/api/social-links', socialLinksRoutes);
