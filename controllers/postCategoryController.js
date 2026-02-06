@@ -19,7 +19,7 @@ exports.getPostCategories = async (req, res) => {
     });
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -34,7 +34,7 @@ exports.getPostCategory = async (req, res) => {
     if (!category) return res.status(404).json({ error: 'Post category not found' });
     res.json(category);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -48,7 +48,7 @@ exports.createPostCategory = async (req, res) => {
     const category = await PostCategory.create({ ...data, name, slug });
     res.status(201).json(category);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -65,7 +65,7 @@ exports.updatePostCategory = async (req, res) => {
     await category.update(data);
     res.json(category);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -77,6 +77,6 @@ exports.deletePostCategory = async (req, res) => {
     await category.destroy();
     res.json({ message: 'Post category deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

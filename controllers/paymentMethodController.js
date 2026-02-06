@@ -28,7 +28,7 @@ exports.getPaymentMethods = async (req, res) => {
     });
     res.json(methods);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -38,7 +38,7 @@ exports.getPaymentMethod = async (req, res) => {
     if (!method) return res.status(404).json({ error: 'Payment method not found' });
     res.json(method);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -53,7 +53,7 @@ exports.createPaymentMethod = async (req, res) => {
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ error: 'Payment method ID already exists' });
     }
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -68,7 +68,7 @@ exports.updatePaymentMethod = async (req, res) => {
     await method.update(req.body);
     res.json(method);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -80,6 +80,6 @@ exports.deletePaymentMethod = async (req, res) => {
     await method.destroy();
     res.json({ message: 'Payment method deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

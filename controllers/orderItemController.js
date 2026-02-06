@@ -28,7 +28,7 @@ exports.getOrderItems = async (req, res) => {
     });
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -43,7 +43,7 @@ exports.getOrderItem = async (req, res) => {
     if (!orderItem) return res.status(404).json({ error: 'OrderItem not found' });
     res.json(orderItem);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -55,7 +55,7 @@ exports.createOrderItem = async (req, res) => {
     const orderItem = await OrderItem.create(req.body);
     res.status(201).json(orderItem);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -70,7 +70,7 @@ exports.updateOrderItem = async (req, res) => {
     await orderItem.update(req.body);
     res.json(orderItem);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -82,6 +82,6 @@ exports.deleteOrderItem = async (req, res) => {
     await orderItem.destroy();
     res.json({ message: 'OrderItem deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

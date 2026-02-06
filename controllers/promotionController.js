@@ -104,7 +104,7 @@ exports.getPromotions = async (req, res) => {
     });
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -120,7 +120,7 @@ exports.getPromotion = async (req, res) => {
     if (!promotion) return res.status(404).json({ error: 'Promotion not found' });
     res.json(promotion);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -161,7 +161,7 @@ exports.createPromotion = async (req, res) => {
     // 5. Có lỗi -> Rollback (Xóa Promotion vừa tạo, hoàn tác giá sản phẩm)
     console.error('Create promotion error:', error);
     await t.rollback();
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -215,7 +215,7 @@ exports.updatePromotion = async (req, res) => {
     // 6. Rollback nếu có lỗi bất kỳ đâu
     await t.rollback();
     console.error('Update promotion error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -268,6 +268,6 @@ exports.deletePromotion = async (req, res) => {
   } catch (error) {
     await t.rollback(); // Hoàn tác nếu lỗi
     console.error('Delete promotion error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

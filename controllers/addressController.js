@@ -17,7 +17,7 @@ exports.getAddresses = async (req, res) => {
     });
     res.json(addresses);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -48,7 +48,7 @@ exports.createAddress = async (req, res) => {
 
     res.status(201).json(address);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -74,7 +74,7 @@ exports.updateAddress = async (req, res) => {
     await address.update(req.body);
     res.json(address);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -102,7 +102,7 @@ exports.deleteAddress = async (req, res) => {
 
     res.json({ message: 'Address deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -123,6 +123,6 @@ exports.setDefaultAddress = async (req, res) => {
 
     res.json(address);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

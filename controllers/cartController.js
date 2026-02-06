@@ -38,7 +38,7 @@ exports.getCart = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -77,7 +77,7 @@ exports.addToCart = async (req, res) => {
     res.status(201).json(cartItem);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -100,7 +100,7 @@ exports.updateCartItem = async (req, res) => {
     res.json(cartItem);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -115,7 +115,7 @@ exports.removeFromCart = async (req, res) => {
     res.json({ message: 'Item removed from cart' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -127,6 +127,6 @@ exports.clearCart = async (req, res) => {
     res.json({ message: 'Cart cleared' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

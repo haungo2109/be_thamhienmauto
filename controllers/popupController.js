@@ -19,7 +19,7 @@ exports.getPopups = async (req, res) => {
     const result = await paginate(Popup, { req });
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -29,7 +29,7 @@ exports.getPopup = async (req, res) => {
     if (!popup) return res.status(404).json({ error: 'Popup not found' });
     res.json(popup);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -42,7 +42,7 @@ exports.getActivePopup = async (req, res) => {
     if (!popup) return res.status(404).json({ error: 'No active popup found' });
     res.json(popup);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -62,7 +62,7 @@ exports.createPopup = async (req, res) => {
     res.status(201).json(popup);
   } catch (error) {
     console.error('Create popup error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -85,7 +85,7 @@ exports.updatePopup = async (req, res) => {
     res.json(popup);
   } catch (error) {
     console.error('Update popup error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -97,6 +97,6 @@ exports.deletePopup = async (req, res) => {
     await popup.destroy();
     res.json({ message: 'Popup deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

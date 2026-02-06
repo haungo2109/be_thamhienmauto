@@ -24,7 +24,7 @@ exports.getPosts = async (req, res) => {
     });
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -39,7 +39,7 @@ exports.getPost = async (req, res) => {
     if (!post) return res.status(404).json({ error: 'Post not found' });
     res.json(post);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -58,7 +58,7 @@ exports.createPost = async (req, res) => {
     });
     res.status(201).json(post);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -75,7 +75,7 @@ exports.updatePost = async (req, res) => {
     await post.update(data);
     res.json(post);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -87,6 +87,6 @@ exports.deletePost = async (req, res) => {
     await post.destroy();
     res.json({ message: 'Post deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

@@ -12,7 +12,7 @@ exports.getContactInfos = async (req, res) => {
     const contactInfos = await ContactInfo.findAll();
     res.json(contactInfos);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -22,7 +22,7 @@ exports.getContactInfo = async (req, res) => {
     if (!contactInfo) return res.status(404).json({ error: 'Contact info not found' });
     res.json(contactInfo);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -34,7 +34,7 @@ exports.createContactInfo = async (req, res) => {
     const contactInfo = await ContactInfo.create(req.body);
     res.status(201).json(contactInfo);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -49,7 +49,7 @@ exports.updateContactInfo = async (req, res) => {
     await contactInfo.update(req.body);
     res.json(contactInfo);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -61,6 +61,6 @@ exports.deleteContactInfo = async (req, res) => {
     await contactInfo.destroy();
     res.json({ message: 'Contact info deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

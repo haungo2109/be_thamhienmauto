@@ -19,7 +19,7 @@ exports.getShippingPartners = async (req, res) => {
     const result = await paginate(ShippingPartner, { req });
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -29,7 +29,7 @@ exports.getShippingPartner = async (req, res) => {
     if (!shippingPartner) return res.status(404).json({ error: 'Shipping partner not found' });
     res.json(shippingPartner);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -41,7 +41,7 @@ exports.createShippingPartner = async (req, res) => {
     const shippingPartner = await ShippingPartner.create(req.body);
     res.status(201).json(shippingPartner);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -56,7 +56,7 @@ exports.updateShippingPartner = async (req, res) => {
     await shippingPartner.update(req.body);
     res.json(shippingPartner);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -68,6 +68,6 @@ exports.deleteShippingPartner = async (req, res) => {
     await shippingPartner.destroy();
     res.json({ message: 'Shipping partner deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

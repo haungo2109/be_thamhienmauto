@@ -63,7 +63,7 @@ exports.getCoupons = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -73,7 +73,7 @@ exports.getCoupon = async (req, res) => {
     if (!coupon) return res.status(404).json({ error: 'Coupon not found' });
     res.json(coupon);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -85,7 +85,7 @@ exports.createCoupon = async (req, res) => {
     const coupon = await Coupon.create(req.body);
     res.status(201).json(coupon);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -100,7 +100,7 @@ exports.updateCoupon = async (req, res) => {
     await coupon.update(req.body);
     res.json(coupon);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -112,7 +112,7 @@ exports.deleteCoupon = async (req, res) => {
     await coupon.destroy();
     res.json({ message: 'Coupon deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -170,6 +170,6 @@ exports.applyCoupon = async (req, res) => {
 
   } catch (error) {
     console.error('Apply coupon error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

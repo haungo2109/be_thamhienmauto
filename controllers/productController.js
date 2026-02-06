@@ -113,7 +113,7 @@ exports.getProducts = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -146,7 +146,7 @@ exports.getProduct = async (req, res) => {
     res.json(productData);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -166,7 +166,7 @@ exports.createProduct = async (req, res) => {
     const product = await Product.create({ ...data, name, slug, image_url });
     res.status(201).json(product);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -257,7 +257,7 @@ exports.updateProduct = async (req, res) => {
   } catch (error) {
     await t.rollback();
     console.error("Update product error:", error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -300,6 +300,6 @@ exports.uploadImage = async (req, res) => {
     });
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

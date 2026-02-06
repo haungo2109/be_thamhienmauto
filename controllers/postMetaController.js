@@ -17,7 +17,7 @@ exports.getPostMetas = async (req, res) => {
     });
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -29,7 +29,7 @@ exports.getPostMeta = async (req, res) => {
     if (!postMeta) return res.status(404).json({ error: 'PostMeta not found' });
     res.json(postMeta);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -41,7 +41,7 @@ exports.createPostMeta = async (req, res) => {
     const postMeta = await PostMeta.create(req.body);
     res.status(201).json(postMeta);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -56,7 +56,7 @@ exports.updatePostMeta = async (req, res) => {
     await postMeta.update(req.body);
     res.json(postMeta);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -68,6 +68,6 @@ exports.deletePostMeta = async (req, res) => {
     await postMeta.destroy();
     res.json({ message: 'PostMeta deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

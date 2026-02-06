@@ -81,7 +81,7 @@ exports.getOrders = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -110,7 +110,7 @@ exports.getMyOrders = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -128,7 +128,7 @@ exports.getOrder = async (req, res) => {
     }
     res.json(order);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -329,7 +329,7 @@ exports.createOrder = async (req, res) => {
   } catch (error) {
     await t.rollback();
     console.error('Create Order Error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -367,7 +367,7 @@ exports.updateOrder = async (req, res) => {
     }
     res.json(order);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -386,6 +386,6 @@ exports.deleteOrder = async (req, res) => {
     await order.destroy();
     res.json({ message: 'Order deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

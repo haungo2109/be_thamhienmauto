@@ -11,7 +11,7 @@ exports.getShippingConfigs = async (req, res) => {
     const shippingConfigs = await ShippingConfig.findAll();
     res.json(shippingConfigs);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -21,7 +21,7 @@ exports.getShippingConfig = async (req, res) => {
     if (!shippingConfig) return res.status(404).json({ error: 'Shipping config not found' });
     res.json(shippingConfig);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -33,7 +33,7 @@ exports.createShippingConfig = async (req, res) => {
     const shippingConfig = await ShippingConfig.create(req.body);
     res.status(201).json(shippingConfig);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -48,7 +48,7 @@ exports.updateShippingConfig = async (req, res) => {
     await shippingConfig.update(req.body);
     res.json(shippingConfig);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -60,6 +60,6 @@ exports.deleteShippingConfig = async (req, res) => {
     await shippingConfig.destroy();
     res.json({ message: 'Shipping config deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

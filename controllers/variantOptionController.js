@@ -20,7 +20,7 @@ exports.getBrands = async (req, res) => {
     res.json(brands.map(b => b.name));
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -53,7 +53,7 @@ exports.getModelsByBrand = async (req, res) => {
     res.json(models.map(m => m.name));
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -67,7 +67,7 @@ exports.getVariantOptions = async (req, res) => {
     });
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -81,7 +81,7 @@ exports.getVariantOption = async (req, res) => {
     if (!variantOption) return res.status(404).json({ error: 'VariantOption not found' });
     res.json(variantOption);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -93,7 +93,7 @@ exports.createVariantOption = async (req, res) => {
     const variantOption = await VariantOption.create(req.body);
     res.status(201).json(variantOption);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -108,7 +108,7 @@ exports.updateVariantOption = async (req, res) => {
     await variantOption.update(req.body);
     res.json(variantOption);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -120,6 +120,6 @@ exports.deleteVariantOption = async (req, res) => {
     await variantOption.destroy();
     res.json({ message: 'VariantOption deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

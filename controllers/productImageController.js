@@ -22,7 +22,7 @@ exports.getProductImages = async (req, res) => {
     });
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -34,7 +34,7 @@ exports.getProductImage = async (req, res) => {
     if (!productImage) return res.status(404).json({ error: 'ProductImage not found' });
     res.json(productImage);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -54,7 +54,7 @@ exports.createProductImage = async (req, res) => {
     });
     res.status(201).json(productImage);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -69,7 +69,7 @@ exports.updateProductImage = async (req, res) => {
     await productImage.update(req.body);
     res.json(productImage);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -85,6 +85,6 @@ exports.deleteProductImage = async (req, res) => {
     await productImage.destroy();
     res.json({ message: 'ProductImage deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

@@ -67,7 +67,7 @@ exports.getUsers = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('Get users error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -100,7 +100,7 @@ exports.getUser = async (req, res) => {
     res.json(user);
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -118,7 +118,7 @@ exports.createUser = async (req, res) => {
     const { password_hash: _, ...userWithoutPassword } = user.toJSON();
     res.status(201).json(userWithoutPassword);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -149,7 +149,7 @@ exports.updateUser = async (req, res) => {
     const { password_hash: _, ...userWithoutPassword } = user.toJSON();
     res.json(userWithoutPassword);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -161,7 +161,7 @@ exports.deleteUser = async (req, res) => {
     await user.destroy();
     res.json({ message: 'User deleted' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -179,7 +179,7 @@ exports.login = async (req, res) => {
     const { password_hash: _, ...userInfo } = user.toJSON();
     res.json({ token, ...userInfo });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -200,6 +200,6 @@ exports.changePassword = async (req, res) => {
 
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };

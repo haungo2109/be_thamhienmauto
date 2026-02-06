@@ -182,7 +182,7 @@ exports.syncBulkVariants = async (req, res) => {
   } catch (error) {
     if (t) await t.rollback();
     console.error('Sync variants error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -199,7 +199,7 @@ exports.getProductVariants = async (req, res) => {
     res.json(variants);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -214,7 +214,7 @@ exports.getProductVariant = async (req, res) => {
     if (!productVariant) return res.status(404).json({ error: 'ProductVariant not found' });
     res.json(productVariant);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -301,7 +301,7 @@ exports.createProductVariant = async (req, res) => {
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ error: 'SKU or Option combination already exists.' });
     }
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -399,7 +399,7 @@ exports.updateProductVariant = async (req, res) => {
   } catch (error) {
     if (t) await t.rollback();
     console.error('Update variant error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
 
@@ -440,6 +440,6 @@ exports.deleteProductVariant = async (req, res) => {
   } catch (error) {
     if (t) await t.rollback();
     console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
