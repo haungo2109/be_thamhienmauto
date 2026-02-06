@@ -1,0 +1,34 @@
+services:
+  app:
+    build: .
+    container_name: be_thamhienmauto_app
+    restart: always
+    ports:
+      - "${PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=production
+      - PGHOST=${PGHOST}
+      - PGPORT=${PGPORT}
+      - PGDATABASE=${PGDATABASE}
+      - PGUSER=${PGUSER}
+      - PGPASSWORD=${PGPASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=3001
+      - RUSTFS_ENDPOINT=${RUSTFS_ENDPOINT}
+      - RUSTFS_USE_SSL=${RUSTFS_USE_SSL}
+      - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY}
+      - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY}
+      - RUSTFS_BUCKET=${RUSTFS_BUCKET}
+      - RUSTFS_REGION=${RUSTFS_REGION}
+    depends_on:
+      - db
+    networks:
+      - app-network
+      - database_network
+
+networks:
+  app-network:
+    driver: bridge
+  database_network:
+    external: true
+    name: dokploy-network
