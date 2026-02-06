@@ -9,7 +9,7 @@ COPY package*.json ./
 
 # Cài đặt các phụ thuộc
 # Sử dụng 'npm ci' cho môi trường production để đảm bảo tính nhất quán
-RUN yarn install --production
+RUN npm install --production
 
 # Sao chép toàn bộ mã nguồn vào container
 COPY . .
@@ -18,4 +18,4 @@ COPY . .
 EXPOSE 3001
 
 # Lệnh khởi chạy ứng dụng
-CMD ["yarn", "start"]
+CMD ["npm", "start"]
