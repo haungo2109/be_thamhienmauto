@@ -21,12 +21,9 @@ services:
       - RUSTFS_BUCKET=${RUSTFS_BUCKET}
       - RUSTFS_REGION=${RUSTFS_REGION}
     networks:
-      - app-network
-      - database_network
+      - dokploy-network
 
 networks:
-  app-network:
-    driver: bridge
-  database_network:
+  dokploy-network:
     external: true
     name: dokploy-network

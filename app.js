@@ -42,6 +42,7 @@ const dashboardRoutes = require('./routes/dashboard');
 require("./associations");
 
 const app = express();
+app.set('trust proxy', 1);
 // Security Headers (Nên đặt đầu tiên)
 app.use(helmet());
 
