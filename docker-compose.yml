@@ -20,8 +20,6 @@ services:
       - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY}
       - RUSTFS_BUCKET=${RUSTFS_BUCKET}
       - RUSTFS_REGION=${RUSTFS_REGION}
-    depends_on:
-      - db
     networks:
       - app-network
       - database_network
