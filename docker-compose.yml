@@ -20,6 +20,8 @@ services:
       - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY}
       - RUSTFS_BUCKET=${RUSTFS_BUCKET}
       - RUSTFS_REGION=${RUSTFS_REGION}
+      - RUSTFS_PUBLIC_DOMAIN=${RUSTFS_PUBLIC_DOMAIN}
+      - RUSTFS_PORT=${RUSTFS_PORT}
     networks:
       - dokploy-network
 
