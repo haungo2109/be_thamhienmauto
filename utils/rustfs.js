@@ -7,6 +7,7 @@ const port = process.env.RUSTFS_PORT ? parseInt(process.env.RUSTFS_PORT, 10) : (
 const endPoint = process.env.RUSTFS_ENDPOINT; // Lưu ý: Chỉ điền tên host/domain, KHÔNG có http://
 
 console.log(`Kết nối RustFS với endPoint: ${endPoint}, port: ${port}, useSSL: ${useSSL}`);
+console.log("ALL ENVS:", JSON.stringify(process.env, null, 2));
 
 const rustfsClient = new Client({
   endPoint: endPoint,
