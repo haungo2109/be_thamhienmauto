@@ -6,6 +6,8 @@ const useSSL = process.env.RUSTFS_USE_SSL === 'true';
 const port = process.env.RUSTFS_PORT ? parseInt(process.env.RUSTFS_PORT, 10) : (useSSL ? 443 : 80);
 const endPoint = process.env.RUSTFS_ENDPOINT; // Lưu ý: Chỉ điền tên host/domain, KHÔNG có http://
 
+console.log(`Kết nối RustFS với endPoint: ${endPoint}, port: ${port}, useSSL: ${useSSL}`);
+
 const rustfsClient = new Client({
   endPoint: endPoint,
   port: port,          // Cực kỳ quan trọng để chạy trong Docker
