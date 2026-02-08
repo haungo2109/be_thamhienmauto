@@ -79,7 +79,7 @@ exports.syncBulkVariants = async (req, res) => {
 
     // Lấy thông tin Promotion/Product cha để tính giá chung cho Create/Update
     const product = await Product.findByPk(product_id, {
-      include: [{ model: Promotion, as: 'promotion' }],
+      include: [{ model: Promotion, as: 'Promotion' }],
       transaction: t
     });
     if (!product) {
@@ -238,7 +238,7 @@ exports.createProductVariant = async (req, res) => {
     const originalPrice = parseFloat(req.body.price);
 
     const product = await Product.findByPk(req.body.product_id, {
-      include: [{ model: Promotion, as: 'promotion' }],
+      include: [{ model: Promotion, as: 'Promotion' }],
       transaction: t
     });
 
@@ -247,8 +247,8 @@ exports.createProductVariant = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    if (product.promotion && product.promotion.is_active) {
-      const { discount_type, discount_value } = product.promotion;
+    if (product.Promotion && product.Promotion.is_active) {
+      const { discount_type, discount_value } = product.Promotion;
       const val = parseFloat(discount_value);
       if (discount_type === 'percentage') {
         salePrice = originalPrice - (originalPrice * (val / 100));
