@@ -16,10 +16,10 @@ export const parseOptions = (optionsData) => {
 };
 
 // Helper tính giá
-export const calculateSalePrice = (originalPrice) => {
+export const calculateSalePrice = (originalPrice, product) => {
   let salePrice = originalPrice;
-  if (product.promotion && product.promotion.is_active) {
-    const { discount_type, discount_value } = product.promotion;
+  if (product.Promotion && product.Promotion.is_active) {
+    const { discount_type, discount_value } = product.Promotion;
     const val = parseFloat(discount_value);
     if (discount_type === 'percentage') {
       salePrice = originalPrice - (originalPrice * (val / 100));

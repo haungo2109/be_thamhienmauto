@@ -112,7 +112,7 @@ exports.syncBulkVariants = async (req, res) => {
 
         const updateData = { ...item };
         if (item.price !== undefined) {
-          updateData.sale_price = calculateSalePrice(parseFloat(item.price));
+          updateData.sale_price = calculateSalePrice(parseFloat(item.price), product);
         }
 
         await variant.update(updateData, { transaction: t });
@@ -136,7 +136,7 @@ exports.syncBulkVariants = async (req, res) => {
         product_id,
         sku: item.sku,
         price: item.price,
-        sale_price: calculateSalePrice(parseFloat(item.price)),
+        sale_price: calculateSalePrice(parseFloat(item.price), product),
         stock_quantity: item.stock_quantity || 0,
         image_url: item.image_url,
         _options: item.options // Lưu tạm
