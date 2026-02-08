@@ -39,7 +39,8 @@ const productSchema = Joi.object({
   sale_price: Joi.number().positive().less(Joi.ref('price')),
   stock_quantity: Joi.number().integer().min(0),
   stock_status: Joi.string().valid('in_stock', 'out_of_stock', 'backorder'),
-  image_url: Joi.string().uri(),
+  image_url: Joi.string().uri().allow(null, ''),
+  images: Joi.array().items(Joi.string().uri().allow(null, '')),
   category_id: Joi.number().integer()
 });
 
@@ -151,21 +152,32 @@ exports.getProduct = async (req, res) => {
 };
 
 exports.createProduct = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const { error } = productSchema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
-
-    let image_url = req.body.image_url;
-    if (req.file) {
-      const fileName = `products/${Date.now()}-${req.file.originalname}`;
-      image_url = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
+    if (error) {
+      await t.rollback();
+      return res.status(400).json({ error: error.details[0].message });
     }
 
-    const { name, ...data } = req.body;
+    const { name, images, image_url, ...data } = req.body;
     const slug = slugify(name, { lower: true });
-    const product = await Product.create({ ...data, name, slug, image_url });
+    
+    const product = await Product.create({ ...data, name, slug, image_url }, { transaction: t });
+
+    if (images && Array.isArray(images)) {
+      const productImages = images.map((url, index) => ({
+        product_id: product.id,
+        image_url: url,
+        display_order: index
+      }));
+      await ProductImage.bulkCreate(productImages, { transaction: t });
+    }
+
+    await t.commit();
     res.status(201).json(product);
   } catch (error) {
+    await t.rollback();
     res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
   }
 };
@@ -188,19 +200,9 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    const { name, price, ...data } = req.body;
+    const { name, price, images, ...data } = req.body;
 
-    // 2. Xử lý Ảnh (Upload trước - Xóa sau)
-    let newImageUrl = null;
-    if (req.file) {
-      // Upload ảnh mới trước
-      const fileName = `products/${Date.now()}-${req.file.originalname}`;
-      newImageUrl = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
-
-      data.image_url = newImageUrl;
-    }
-
-    // 3. Xử lý Slug
+    // 2. Xử lý Slug
     if (name) data.slug = slugify(name, { lower: true });
 
     // 4. Xử lý Giá (Quan trọng)
@@ -210,12 +212,8 @@ exports.updateProduct = async (req, res) => {
       const variantCount = await ProductVariant.count({ where: { product_id: product.id } });
       
       if (variantCount > 0) {
-        // Option A: Báo lỗi
-        // await t.rollback();
-        // return res.status(400).json({ error: 'Cannot update price directly. Please update product variants.' });
-        
-        // Option B (Mềm mỏng): Bỏ qua field price, chỉ update thông tin khác
-        console.warn(`[UpdateProduct] Ignored price update for product ${product.id} because it has variants.`);
+        await t.rollback();
+        return res.status(400).json({ error: 'Cannot update price directly. Please update product variants.' });
       } else {
         // 4.2. Logic cho Simple Product
         data.price = price;
@@ -244,13 +242,20 @@ exports.updateProduct = async (req, res) => {
     // 5. Update Database
     await product.update(data, { transaction: t });
 
-    await t.commit(); // Commit transaction
-
-    // 6. Dọn dẹp: Xóa ảnh cũ (Chỉ làm khi mọi thứ đã thành công)
-    if (newImageUrl && product.image_url) {
-      // Không cần await để tránh block response, hoặc catch error để không crash
-      deleteFile(product.image_url).catch(err => console.error("Failed to delete old image:", err));
+    // Handle images
+    if (images && Array.isArray(images)) {
+      await ProductImage.destroy({ where: { product_id: product.id }, transaction: t });
+      if (images.length > 0) {
+        const productImages = images.map((url, index) => ({
+          product_id: product.id,
+          image_url: url,
+          display_order: index
+        }));
+        await ProductImage.bulkCreate(productImages, { transaction: t });
+      }
     }
+
+    await t.commit(); // Commit transaction
 
     res.json(product);
 

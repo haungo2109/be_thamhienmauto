@@ -11,7 +11,7 @@ const Product = sequelize.define('Product', {
   sale_price: { type: DataTypes.DECIMAL(15, 2) },
   stock_quantity: { type: DataTypes.INTEGER, defaultValue: 0 },
   stock_status: { type: DataTypes.ENUM('in_stock', 'out_of_stock', 'backorder'), defaultValue: 'in_stock' },
-  image_url: { type: DataTypes.STRING(255) },
+  image_url: { type: DataTypes.STRING(255) }, // ảnh đại diện
   category_id: { type: DataTypes.BIGINT },
   promotion_id: { type: DataTypes.BIGINT },
   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
