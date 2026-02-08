@@ -33,7 +33,6 @@ const syncVariantsSchema = Joi.object({
   // Mảng các item thêm mới (giống schema createBulk)
   created: Joi.array().items(
     Joi.object({
-      sku: Joi.string().max(100),
       price: Joi.number().positive().required(),
       stock_quantity: Joi.number().integer().min(0),
       image_url: Joi.string().uri().allow('', null),
@@ -50,7 +49,6 @@ const syncVariantsSchema = Joi.object({
   updated: Joi.array().items(
     Joi.object({
       id: Joi.number().integer().required(), // Phải có ID
-      sku: Joi.string().max(100),
       price: Joi.number().positive(),
       stock_quantity: Joi.number().integer().min(0),
       image_url: Joi.string().uri().allow('', null),
