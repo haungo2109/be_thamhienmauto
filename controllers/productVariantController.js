@@ -229,6 +229,13 @@ exports.createProductVariant = async (req, res) => {
     // 2. Xử lý ảnh
     let imageUrl = req.body.image_url || null;
     if (req.file) {
+      // Validate file type
+      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/avif', 'image/bmp', 'image/tiff'];
+      if (!allowedMimeTypes.includes(req.file.mimetype)) {
+        await t.rollback();
+        return res.status(400).json({ error: 'Invalid file type. Only JPG, PNG, GIF, WEBP, SVG, AVIF, BMP, and TIFF are allowed.' });
+      }
+
       const fileName = `products/${Date.now()}-${req.file.originalname}`;
       imageUrl = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
     }
@@ -330,6 +337,13 @@ exports.updateProductVariant = async (req, res) => {
 
     // 1. Xử lý ảnh
     if (req.file) {
+      // Validate file type
+      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/avif', 'image/bmp', 'image/tiff'];
+      if (!allowedMimeTypes.includes(req.file.mimetype)) {
+        await t.rollback();
+        return res.status(400).json({ error: 'Invalid file type. Only JPG, PNG, GIF, WEBP, SVG, AVIF, BMP, and TIFF are allowed.' });
+      }
+
       const fileName = `products/${Date.now()}-${req.file.originalname}`;
       const newImageUrl = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
       updateData.image_url = newImageUrl;

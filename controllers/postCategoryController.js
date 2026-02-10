@@ -5,6 +5,7 @@ const { paginate } = require('../utils/pagination');
 
 const postCategorySchema = Joi.object({
   name: Joi.string().min(1).max(255).required(),
+  slug: Joi.string().max(255).allow('', null),
   parent_id: Joi.number().integer().allow(null)
 });
 
@@ -43,8 +44,8 @@ exports.createPostCategory = async (req, res) => {
     const { error } = postCategorySchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details[0].message });
 
-    const { name, ...data } = req.body;
-    const slug = slugify(name, { lower: true });
+    const { name, slug: providedSlug, ...data } = req.body;
+    const slug = providedSlug || slugify(name, { lower: true });
     const category = await PostCategory.create({ ...data, name, slug });
     res.status(201).json(category);
   } catch (error) {
@@ -60,9 +61,13 @@ exports.updatePostCategory = async (req, res) => {
     const category = await PostCategory.findByPk(req.params.id);
     if (!category) return res.status(404).json({ error: 'Post category not found' });
 
-    const { name, ...data } = req.body;
-    if (name) data.slug = slugify(name, { lower: true });
-    await category.update(data);
+    const { name, slug: providedSlug, ...data } = req.body;
+    if (providedSlug) {
+      data.slug = providedSlug;
+    } else if (name) {
+      data.slug = slugify(name, { lower: true });
+    }
+    await category.update({ ...data, name });
     res.json(category);
   } catch (error) {
     res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });

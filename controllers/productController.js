@@ -34,7 +34,8 @@ exports.syncProductPriceWithVariants = async (productId) => {
 
 const productSchema = Joi.object({
   name: Joi.string().min(1).max(255).required(),
-  description: Joi.string().max(1000),
+  slug: Joi.string().max(255).allow('', null),
+  description: Joi.string().max(1000).allow('', null),
   price: Joi.number().positive().required(),
   sale_price: Joi.number().positive().less(Joi.ref('price')),
   stock_quantity: Joi.number().integer().min(0),
@@ -160,8 +161,8 @@ exports.createProduct = async (req, res) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const { name, images, image_url, ...data } = req.body;
-    const slug = slugify(name, { lower: true });
+    const { name, slug: providedSlug, images, image_url, ...data } = req.body;
+    const slug = providedSlug || slugify(name, { lower: true });
     
     const product = await Product.create({ ...data, name, slug, image_url }, { transaction: t });
 
@@ -200,10 +201,14 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    const { name, price, images, ...data } = req.body;
+    const { name, slug: providedSlug, price, images, ...data } = req.body;
 
     // 2. Xử lý Slug
-    if (name) data.slug = slugify(name, { lower: true });
+    if (providedSlug) {
+      data.slug = providedSlug;
+    } else if (name) {
+      data.slug = slugify(name, { lower: true });
+    }
 
     // 4. Xử lý Giá (Quan trọng)
     if (price !== undefined) {
@@ -291,9 +296,9 @@ exports.uploadImage = async (req, res) => {
     }
 
     // Validate file type
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/avif', 'image/bmp', 'image/tiff'];
     if (!allowedMimeTypes.includes(req.file.mimetype)) {
-      return res.status(400).json({ error: 'Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.' });
+      return res.status(400).json({ error: 'Invalid file type. Only JPG, PNG, GIF, WEBP, SVG, AVIF, BMP, and TIFF are allowed.' });
     }
 
     const fileName = `products/${Date.now()}-${req.file.originalname.replace(/\s+/g, '-')}`;

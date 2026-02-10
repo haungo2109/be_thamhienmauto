@@ -39,7 +39,6 @@ exports.getActivePopup = async (req, res) => {
       where: { is_active: true },
       order: [['id', 'DESC']] // Get the most recently created active popup
     });
-    if (!popup) return res.status(404).json({ error: 'No active popup found' });
     res.json(popup);
   } catch (error) {
     res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });
@@ -53,6 +52,12 @@ exports.createPopup = async (req, res) => {
 
     let popupData = req.body;
     if (req.file) {
+      // Validate file type
+      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/avif', 'image/bmp', 'image/tiff'];
+      if (!allowedMimeTypes.includes(req.file.mimetype)) {
+        return res.status(400).json({ error: 'Invalid file type. Only JPG, PNG, GIF, WEBP, SVG, AVIF, BMP, and TIFF are allowed.' });
+      }
+
       const fileName = `popups/${Date.now()}-${req.file.originalname}`;
       const imageUrl = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
       popupData = { ...req.body, image_url: imageUrl };
@@ -76,6 +81,12 @@ exports.updatePopup = async (req, res) => {
 
     let updateData = req.body;
     if (req.file) {
+      // Validate file type
+      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/avif', 'image/bmp', 'image/tiff'];
+      if (!allowedMimeTypes.includes(req.file.mimetype)) {
+        return res.status(400).json({ error: 'Invalid file type. Only JPG, PNG, GIF, WEBP, SVG, AVIF, BMP, and TIFF are allowed.' });
+      }
+
       const fileName = `popups/${Date.now()}-${req.file.originalname}`;
       const imageUrl = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
       updateData = { ...req.body, image_url: imageUrl };

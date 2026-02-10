@@ -7,8 +7,9 @@ const { paginate } = require('../utils/pagination');
 
 const postSchema = Joi.object({
   title: Joi.string().min(1).max(255).required(),
-  content: Joi.string(),
-  excerpt: Joi.string().max(500),
+  slug: Joi.string().max(200).allow('', null),
+  content: Joi.string().allow('', null),
+  excerpt: Joi.string().max(500).allow('', null),
   status: Joi.string().valid('published', 'draft', 'archived'),
   category_id: Joi.number().integer()
 });
@@ -48,8 +49,8 @@ exports.createPost = async (req, res) => {
     const { error } = postSchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details[0].message });
 
-    const { title, ...data } = req.body;
-    const slug = slugify(title, { lower: true });
+    const { title, slug: providedSlug, ...data } = req.body;
+    const slug = providedSlug || slugify(title, { lower: true });
     const post = await Post.create({
       ...data,
       title,
@@ -70,9 +71,13 @@ exports.updatePost = async (req, res) => {
     const post = await Post.findByPk(req.params.id);
     if (!post) return res.status(404).json({ error: 'Post not found' });
 
-    const { title, ...data } = req.body;
-    if (title) data.slug = slugify(title, { lower: true });
-    await post.update(data);
+    const { title, slug: providedSlug, ...data } = req.body;
+    if (providedSlug) {
+      data.slug = providedSlug;
+    } else if (title) {
+      data.slug = slugify(title, { lower: true });
+    }
+    await post.update({ ...data, title });
     res.json(post);
   } catch (error) {
     res.status(500).json({ error: `Internal server error ${JSON.stringify(error)}` });

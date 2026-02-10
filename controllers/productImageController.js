@@ -45,6 +45,12 @@ exports.createProductImage = async (req, res) => {
 
     if (!req.file) return res.status(400).json({ error: 'Image file is required' });
 
+    // Validate file type
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/avif', 'image/bmp', 'image/tiff'];
+    if (!allowedMimeTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({ error: 'Invalid file type. Only JPG, PNG, GIF, WEBP, SVG, AVIF, BMP, and TIFF are allowed.' });
+    }
+
     const fileName = `products/${Date.now()}-${req.file.originalname}`;
     const imageUrl = await uploadFile(fileName, req.file.buffer, req.file.mimetype);
 
